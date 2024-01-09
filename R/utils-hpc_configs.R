@@ -21,7 +21,7 @@ hpc_configs[["renv_sbatch_opts"]] <- EpiModelHPC:::swf_renv_sbatch_opts()
 
   hpc_configs[["r_loader"]] <- c(
     "module purge all",
-    paste0("module load r/", r_version),
+    paste0("module load R/", r_version),
     "module load git"
   )
 
