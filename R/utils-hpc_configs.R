@@ -39,7 +39,7 @@ hpc_configs[["renv_sbatch_opts"]] <- EpiModelHPC:::swf_renv_sbatch_opts()
 
 hpc_configs <- swf_configs_quest(
   partition = "short", # ASK ABOUT THIS
-  r_version = "4.2.1",
+  r_version = "4.2.3",
   mail_user = mail_user
 )
 #
