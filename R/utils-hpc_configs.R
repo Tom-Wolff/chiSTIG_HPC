@@ -2,7 +2,7 @@
 
 swf_configs_quest <- function(partition = "short",
                               account = "p32153",
-                              r_version = "4.2.3",
+                              r_version = "4.3.0",
                               conda_proj = NULL,
                               mail_user = NULL) {
 
@@ -39,7 +39,7 @@ hpc_configs[["renv_sbatch_opts"]] <- EpiModelHPC:::swf_renv_sbatch_opts()
 
 hpc_configs <- swf_configs_quest(
   partition = "short", # ASK ABOUT THIS
-  r_version = "4.2.3",
+  r_version = "4.3.0",
   mail_user = mail_user
 )
 #
