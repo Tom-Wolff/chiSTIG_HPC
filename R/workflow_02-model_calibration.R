@@ -45,7 +45,36 @@ control <- control_msm(
   .checkpoint.dir     = "./temp/cp_calib",
   .checkpoint.clear   = TRUE,
   .checkpoint.steps   = 15 * 52,
-  verbose             = FALSE
+  verbose             = FALSE,
+
+  initialize.FUN =              chiSTIGmodules::initialize_msm_chi,
+  aging.FUN =                   chiSTIGmodules::aging_msm_chi,
+  departure.FUN =               chiSTIGmodules::departure_msm_chi,
+  arrival.FUN =                 chiSTIGmodules::arrival_msm_chi,
+  # venues.FUN =                  chiSTIGmodules:::venues_msm_chi,
+  partident.FUN =               chiSTIGmodules::partident_msm_chi,
+  hivtest.FUN =                 chiSTIGmodules::hivtest_msm_chi,
+  hivtx.FUN =                   chiSTIGmodules::hivtx_msm_chi,
+  hivprogress.FUN =             chiSTIGmodules::hivprogress_msm_chi,
+  hivvl.FUN =                   chiSTIGmodules::hivvl_msm_chi,
+  resim_nets.FUN =              chiSTIGmodules::simnet_msm_chi,
+  acts.FUN =                    chiSTIGmodules::acts_msm_chi,
+  condoms.FUN =                 chiSTIGmodules::condoms_msm_chi,
+  position.FUN =                chiSTIGmodules::position_msm_chi,
+  prep.FUN =                    chiSTIGmodules::prep_msm_chi,
+  hivtrans.FUN =                chiSTIGmodules::hivtrans_msm_chi,
+  exotrans.FUN =                chiSTIGmodules:::exotrans_msm_chi,
+  stitrans.FUN =                chiSTIGmodules::stitrans_msm_chi,
+  stirecov.FUN =                chiSTIGmodules::stirecov_msm_chi,
+  stitx.FUN =                   chiSTIGmodules::stitx_msm_chi,
+  prev.FUN =                    chiSTIGmodules::prevalence_msm_chi,
+  cleanup.FUN =                 chiSTIGmodules::cleanup_msm_chi,
+
+  module.order = c("aging.FUN", "departure.FUN", "arrival.FUN", # "venues.FUN",
+                   "partident.FUN", "hivtest.FUN", "hivtx.FUN", "hivprogress.FUN",
+                   "hivvl.FUN", "resim_nets.FUN", "acts.FUN", "condoms.FUN",
+                   "position.FUN", "prep.FUN", "hivtrans.FUN", "exotrans.FUN",
+                   "stitrans.FUN", "stirecov.FUN", "stitx.FUN", "prev.FUN", "cleanup.FUN")
 )
 
 # insert test values here
