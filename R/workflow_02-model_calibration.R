@@ -89,13 +89,14 @@ scenarios_df <- tibble(
 )
 scenarios_list <- EpiModel::create_scenario_list(scenarios_df)
 
+
 wf <- add_workflow_step(
   wf_summary = wf,
   step_tmpl = step_tmpl_netsim_scenarios(
     path_to_est, param, init, control,
     scenarios_list = scenarios_list,
     output_dir = "./data/intermediate/calibration",
-    libraries = "EpiModelHIV",
+    libraries = c("slurmworkflow", "EpiModelHPC", "chiSTIGmodules"),
     n_rep = 2,
     n_cores = max_cores,
     save_pattern = "simple",
