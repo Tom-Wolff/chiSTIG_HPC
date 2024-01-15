@@ -6,6 +6,7 @@
 library("slurmworkflow")
 library("EpiModelHPC")
 library("EpiModelHIV")
+library("chiSTIGmodules")
 
 # Settings ---------------------------------------------------------------------
 source("./R/utils-0_project_settings.R")
@@ -95,7 +96,11 @@ wf <- add_workflow_step(
     path_to_est, param, init, control,
     scenarios_list = scenarios_list,
     output_dir = "./data/intermediate/calibration",
-    libraries = c("EpiModelHIV", "chiSTIGmodules"),
+    libraries = c(#"EpiModelHIV",
+                  "slurmworkflow",
+                  "EpiModelHPC",
+                  "chiSTIGmodules"
+                  ),
     n_rep = 2,
     n_cores = max_cores,
     save_pattern = "simple",
