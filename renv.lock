@@ -450,9 +450,9 @@
       "RemoteHost": "api.github.com",
       "RemoteRepo": "chiSTIGmodules",
       "RemoteUsername": "Tom-Wolff",
-      "RemoteRef": "main",
-      "RemoteSha": "a76640ac1a5ca3613075cdc6f795142ed3f37595",
-      "Hash": "40aaa80f2f1d308225036af022338e43"
+      "RemoteRef": "HEAD",
+      "RemoteSha": "0a90c19a18aaff4c9b4b4b7ed66ca16ca8e87782",
+      "Hash": "a6a813e4da24368642d4363f176a83f4"
     },
     "cli": {
       "Package": "cli",
