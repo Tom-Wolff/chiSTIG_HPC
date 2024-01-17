@@ -3,8 +3,8 @@ if (!context %in% c("local", "hpc")) {
 }
 
 epistats <- readRDS("./data/intermediate/estimates/epistats-local.rds")
-# netstats <- readRDS("./data/intermediate/estimates/netstats-novenues-local.rds")
-netstats <- readRDS("data/intermediate/estimates/netstats-local.rds")
+netstats <- readRDS("./data/intermediate/estimates/netstats-novenues-local.rds")
+# netstats <- readRDS("data/intermediate/estimates/netstats-local.rds")
 # Is the aging out of the older initial nodes driving HIV extinction?
 # Let's level out the age distribution and find out
 netstats$attr$age <- sample(16:29, length(netstats$attr$age), replace = TRUE)

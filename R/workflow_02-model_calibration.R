@@ -42,9 +42,9 @@ control <- control_msm(
   cumulative.edgelist = TRUE,
   truncate.el.cuml    = 0,
   .tracker.list       = calibration_trackers,
-  .checkpoint.dir     = "./temp/cp_calib",
-  .checkpoint.clear   = TRUE,
-  .checkpoint.steps   = 15 * 52,
+  # .checkpoint.dir     = "./temp/cp_calib",
+  # .checkpoint.clear   = TRUE,
+  # .checkpoint.steps   = 15 * 52,
   verbose             = FALSE,
 
   initialize.FUN =              chiSTIGmodules::initialize_msm_chi,
@@ -93,13 +93,13 @@ wf <- add_workflow_step(
   wf_summary = wf,
   step_tmpl = step_tmpl_netsim_scenarios(
     path_to_est, param, init, control,
-    scenarios_list = scenarios_list,
+    scenarios_list = NULL, #cenarios_list,
     output_dir = "./data/intermediate/calibration",
-    libraries = c(#"EpiModelHIV",
-                  "slurmworkflow",
-                  "EpiModelHPC",
-                  "chiSTIGmodules"
-                  ),
+    # libraries = c(#"EpiModelHIV",
+    #               "slurmworkflow",
+    #               "EpiModelHPC",
+    #               "chiSTIGmodules"
+    #               ),
     n_rep = 2,
     n_cores = max_cores,
     save_pattern = "simple",
@@ -114,26 +114,26 @@ wf <- add_workflow_step(
   )
 )
 
-# Process calibrations
-#
-# produce a data frame with the calibration targets for each scenario
-wf <- add_workflow_step(
-  wf_summary = wf,
-  step_tmpl = step_tmpl_do_call_script(
-    r_script = "./R/11-calibration_process.R",
-    args = list(
-      context = "hpc",
-      ncores = 15
-    ),
-    setup_lines = hpc_configs$r_loader
-  ),
-  sbatch_opts = list(
-    "cpus-per-task" = 15,
-    "time" = "04:00:00",
-    "mem-per-cpu" = "4G",
-    "mail-type" = "END"
-  )
-)
+# # Process calibrations
+# #
+# # produce a data frame with the calibration targets for each scenario
+# wf <- add_workflow_step(
+#   wf_summary = wf,
+#   step_tmpl = step_tmpl_do_call_script(
+#     r_script = "./R/11-calibration_process.R",
+#     args = list(
+#       context = "hpc",
+#       ncores = 15
+#     ),
+#     setup_lines = hpc_configs$r_loader
+#   ),
+#   sbatch_opts = list(
+#     "cpus-per-task" = 15,
+#     "time" = "04:00:00",
+#     "mem-per-cpu" = "4G",
+#     "mail-type" = "END"
+#   )
+# )
 
 # Send the workflow folder to the <HPC> and run it
 #

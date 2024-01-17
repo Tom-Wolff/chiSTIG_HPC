@@ -18,7 +18,7 @@ epistats$age.limits <- c(16, 30)
 
 netstats <- readRDS("data/intermediate/estimates/netstats-local.rds")
 # `netstats` without venues target stats, in case this changes anything
-# netstats <- readRDS("data/intermediate/estimates/netstats-novenues-local.rds")
+netstats <- readRDS("data/intermediate/estimates/netstats-novenues-local.rds")
 
 
 ##### `est` object for basic ERGMs (no venues or apps)
