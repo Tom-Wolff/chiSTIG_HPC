@@ -59,6 +59,6 @@ hpc_configs <- swf_configs_quest(
 
 hpc_configs <- EpiModelHPC::swf_configs_rsph(
   partition = c("epimodel", "preemptable")[1],
-  r_version = "4.3",
+  r_version = "4.3.2",
   mail_user = mail_user
   )
