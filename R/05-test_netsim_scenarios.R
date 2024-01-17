@@ -12,12 +12,51 @@ source("R/utils-0_project_settings.R")
 
 #  -----------------------------------------------------------------------------
 # Necessary files
-source("R/utils-default_inputs.R") # generate `path_to_est`, `param` and `init`
+# source("R/utils-default_inputs.R") # generate `path_to_est`, `param` and `init`
+source("./R/utils-chistig_basic_inputs.R") # make `path_to_est`, `param` and `init`
 
 # Controls
 source("R/utils-targets.R")
 # `nsims` and `ncores` will be overridden later
-control <- control_msm(nsteps = 52 * 1)
+
+# Control settings
+control <- EpiModelHIV::control_msm(
+  # nsteps = 1000,
+   # nsteps = calibration_end + 520,
+   nsteps =  prep_start + 52 * 2,
+  nsims = 1,
+  ncores = 10,
+  cumulative.edgelist = TRUE,
+  raw.output = TRUE,
+  .tracker.list       = calibration_trackers,
+  initialize.FUN =                  chiSTIGmodules::initialize_msm_chi,
+  aging.FUN =                       chiSTIGmodules::aging_msm_chi,
+  departure.FUN =                   chiSTIGmodules::departure_msm_chi,
+  arrival.FUN =                     chiSTIGmodules::arrival_msm_chi,
+  # venues.FUN =                      chiSTIGmodules:::venues_msm_chi,
+  partident.FUN =                   chiSTIGmodules::partident_msm_chi,
+  hivtest.FUN =                     chiSTIGmodules::hivtest_msm_chi,
+  hivtx.FUN =                       chiSTIGmodules::hivtx_msm_chi,
+  hivprogress.FUN =                 chiSTIGmodules::hivprogress_msm_chi,
+  hivvl.FUN =                       chiSTIGmodules::hivvl_msm_chi,
+  resim_nets.FUN =                  chiSTIGmodules::simnet_msm_chi,
+  acts.FUN =                        chiSTIGmodules::acts_msm_chi,
+  condoms.FUN =                     chiSTIGmodules::condoms_msm_chi,
+  position.FUN =                    chiSTIGmodules::position_msm_chi,
+  prep.FUN =                        chiSTIGmodules::prep_msm_chi,
+  hivtrans.FUN =                    chiSTIGmodules::hivtrans_msm_chi,
+  exotrans.FUN =                    chiSTIGmodules:::exotrans_msm_chi,
+  stitrans.FUN =                    chiSTIGmodules::stitrans_msm_chi,
+  stirecov.FUN =                    chiSTIGmodules::stirecov_msm_chi,
+  stitx.FUN =                       chiSTIGmodules::stitx_msm_chi,
+  prev.FUN =                        chiSTIGmodules::prevalence_msm_chi,
+  cleanup.FUN =                     chiSTIGmodules::cleanup_msm_chi,
+  module.order = c("aging.FUN", "departure.FUN", "arrival.FUN", # "venues.FUN",
+                   "partident.FUN", "hivtest.FUN", "hivtx.FUN", "hivprogress.FUN",
+                   "hivvl.FUN", "resim_nets.FUN", "acts.FUN", "condoms.FUN",
+                   "position.FUN", "prep.FUN", "hivtrans.FUN", "exotrans.FUN",
+                   "stitrans.FUN", "stirecov.FUN", "stitx.FUN", "prev.FUN", "cleanup.FUN")
+)
 
 # See listing of modules and other control settings
 # Module function defaults defined in ?control_msm

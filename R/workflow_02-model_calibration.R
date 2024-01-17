@@ -6,7 +6,6 @@
 library("slurmworkflow")
 library("EpiModelHPC")
 library("EpiModelHIV")
-library("chiSTIGmodules")
 
 # Settings ---------------------------------------------------------------------
 source("./R/utils-0_project_settings.R")

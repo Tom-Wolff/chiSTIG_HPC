@@ -191,8 +191,8 @@ process_one_calibration <- function(file_name, nsteps = 52) {
 }
 
 # required trackers for the calibration step
-#source("R/utils-epi_trackers.R")
-source("/Users/wms1212/Desktop/ChiSTIG_model/epimodel/R/utils-epi_trackers.R")
+source("R/utils-epi_trackers.R")
+# source("/Users/wms1212/Desktop/ChiSTIG_model/epimodel/R/utils-epi_trackers.R")
 
 
 # Named list of trackers required for computing the calibration targets
