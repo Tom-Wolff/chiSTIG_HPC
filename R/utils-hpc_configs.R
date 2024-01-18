@@ -4,7 +4,7 @@ swf_configs_quest <- function(partition = "short",
                               account = "p32153",
                               r_version = "4.3.0",
                               conda_proj = NULL,
-                              mail_user = NULL) {
+                              mail_user = "tom.wolff@northwestern.edu") {
 
   hpc_configs <- list()
   hpc_configs[["default_sbatch_opts"]] <-  list(
