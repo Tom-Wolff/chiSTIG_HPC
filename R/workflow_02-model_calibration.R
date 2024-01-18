@@ -137,7 +137,7 @@ wf <- add_workflow_step(
 
 # Send the workflow folder to the <HPC> and run it
 #
-# $ scp -r ./workflows/model_calibration quest.northwestern.edu:/projects/p32153/chiSTIG_HPC/workflows/
+# $ scp -r ./workflows/model_calibration <HPC>:<project_dir>/workflows/
 #
 # on the HPC:
 # $ ./workflows/model_calibration/start_workflow.sh
