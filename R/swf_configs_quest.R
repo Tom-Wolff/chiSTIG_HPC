@@ -1,8 +1,8 @@
 swf_configs_quest <- function(partition = "short",
                               account = "p32153",
-                              r_version = "4.2.3",
+                              r_version = "4.3.0",
                               conda_proj = NULL,
-                              mail_user = NULL) {
+                              mail_user = "tom.wolff@northwestern.edu") {
 
   hpc_configs <- list()
   hpc_configs[["default_sbatch_opts"]] <-  list(
@@ -19,7 +19,7 @@ swf_configs_quest <- function(partition = "short",
 
   hpc_configs[["r_loader"]] <- c(
     "module purge all",
-    paste0("module load r/", r_version),
+    paste0("module load R/", r_version),
     "module load git"
   )
 
