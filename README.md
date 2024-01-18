@@ -6,8 +6,10 @@ What follows below is a simplifed set of steps for running EpiModel jobs on the 
 
 ## 2. Log in to Quest via Command Line and head to project directory
 
-`$ ssh -X <webID>@quest.northwestern.edu`    
-(Note: You’ll be asked for your password here)\
+`$ ssh -X <webID>@quest.northwestern.edu`
+
+(Note: You’ll be asked for your password here)
+
 `$ cd /projects/p32153`
 
 ## 3. Clone (or pull latest version of) this Repository to HPC
@@ -15,16 +17,32 @@ What follows below is a simplifed set of steps for running EpiModel jobs on the 
 `$ git clone https://github.com/Tom-Wolff/chiSTIG_HPC.git`
 
 Otherwise
-`cd ./chiSTIG_HPC`
-`git pull`
+
+`$ cd ./chiSTIG_HPC`
+
+`$ git pull`
 
 ## 4. Ensure R environment and packages are all up to date
 
-`$ module load R/4.3.0`      # Load R version 4.3.0
-`$ R`                        # Enter R
-`> renv::restore()`          # Restore R environment from lockfile (added to project directory via GitHub
-`> q()`                      # Quit R (Choose “n” for saving workspace)
-`$ exit`				             # Log out of quest
+Load R version 4.3.0
+
+`$ module load R/4.3.0`
+
+Enter R
+
+`$ R`
+
+Restore R environment from lockfile (added to project directory via GitHub
+
+`> renv::restore()`
+
+Quit R (Choose “n” for saving workspace)
+
+`> q()`
+
+Log out of Quest
+
+`$ exit`				             
 
 ## 5. On Your Local machine, Run the Workflow Script for the Part of the Process you Wish to Run on Quest
 
@@ -37,6 +55,7 @@ If this folder already exists in your local project repository, you’ll want to
 ## 6. From the command line, copy the newly-created subdirectory of `workflows` created by this script to its corresponding place on the HPC directory
 
 `$ scp -r ./workflows/model_calibration quest.northwestern.edu:projects/p32153/workflows/`
+
 Note: You'll be asked for your password once more
 
 ## 7. epistats, netstats, and netest objects are recommended to be uploaded manually to the HPC via Globus
@@ -45,9 +64,12 @@ You’ll want to place these filed in the folder where they’re called on by sc
 
 ## 8. Log back onto Quest and submit the job through the command line
 
-`$ ssh -X <webID>@quest.northwestern.edu`    
+`$ ssh -X <webID>@quest.northwestern.edu`
+
 (Password entry)
+
 `$ cd /projects/p32153/chiSTIG_HPC`
+
 `$ ./workflows/model_calibration/start_workflow.sh`
 
 ## 9. Await job completion or crash
