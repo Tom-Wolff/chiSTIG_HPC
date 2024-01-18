@@ -26,8 +26,8 @@ param <- param.net(
 # For models without bacterial STIs, these must be initialized here
 # with non-zero values
 init <- init_msm(
-  prev.ugc = 0.1,
-  prev.rct = 0.1,
-  prev.rgc = 0.1,
-  prev.uct = 0.1
+  prev.ugc = 0,
+  prev.rct = 0,
+  prev.rgc = 0,
+  prev.uct = 0
 )

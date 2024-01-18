@@ -2,11 +2,9 @@
 ## parameterization and all parameters defined in `param_msm`, with example of
 ## writing/debugging modules
 
-devtools::load_all(path = "~/Desktop/chiSTIGmodules")
-setwd("~/Desktop/ChiSTIG_model/epimodel")
-
 # Libraries  -------------------------------------------------------------------
 library("EpiModelHIV")
+library("chiSTIGmodules")
 
 # Settings ---------------------------------------------------------------------
 source("R/utils-0_project_settings.R")
@@ -18,7 +16,7 @@ epistats$age.breaks <- c(16, 20, 30)
 # age limits probably needs to be maxed at 31
 epistats$age.limits <- c(16, 30)
 
-# netstats <- readRDS("data/intermediate/estimates/netstats-local.rds")
+netstats <- readRDS("data/intermediate/estimates/netstats-local.rds")
 # `netstats` without venues target stats, in case this changes anything
 netstats <- readRDS("data/intermediate/estimates/netstats-novenues-local.rds")
 
@@ -79,14 +77,13 @@ init <- EpiModelHIV::init_msm(
 # Control settings
 control <- EpiModelHIV::control_msm(
   # nsteps = 1000,
-   nsteps = calibration_end + 520,
+   # nsteps = calibration_end + 520,
+   nsteps =  prep_start + 52 * 2,
   nsims = 1,
   ncores = 10,
   cumulative.edgelist = TRUE,
   raw.output = TRUE,
-
   .tracker.list       = calibration_trackers,
-
   initialize.FUN =                  chiSTIGmodules::initialize_msm_chi,
   aging.FUN =                       chiSTIGmodules::aging_msm_chi,
   departure.FUN =                   chiSTIGmodules::departure_msm_chi,
@@ -109,7 +106,6 @@ control <- EpiModelHIV::control_msm(
   stitx.FUN =                       chiSTIGmodules::stitx_msm_chi,
   prev.FUN =                        chiSTIGmodules::prevalence_msm_chi,
   cleanup.FUN =                     chiSTIGmodules::cleanup_msm_chi,
-
   module.order = c("aging.FUN", "departure.FUN", "arrival.FUN", # "venues.FUN",
                    "partident.FUN", "hivtest.FUN", "hivtx.FUN", "hivprogress.FUN",
                    "hivvl.FUN", "resim_nets.FUN", "acts.FUN", "condoms.FUN",

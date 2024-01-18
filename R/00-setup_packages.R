@@ -1,7 +1,8 @@
 # This code installs the packages only available on GitHub (not on CRAN)
 renv::install(c(
-  "EpiModel/EpiModelHIV-p@main",
-  "EpiModel/EpiModelHPC"
+  "Tom-Wolff/chiSTIGmodules@main",
+  "EpiModel/EpiModelHIV-p",
+ "EpiModel/EpiModelHPC"
 ))
 
 # This code finds and install the libraries used by the project (CRAN version)
