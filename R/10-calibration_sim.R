@@ -129,7 +129,7 @@ control <- EpiModelHIV::control_msm(
 
 # Receptive(102-186)/10000
 # Insertive (1-19)/10000
-n_scenarios <- 4
+n_scenarios <- 2
 scenarios_df <- tibble(
   # mandatory columns
   .scenario.id = as.character(seq_len(n_scenarios)),
@@ -148,11 +148,11 @@ scenarios_df <- tibble(
   # Arrival Rate (Population Size)
   # a.rate = seq(0.001386813, 0.001386813, length.out = n_scenarios)#,
 
- #  # Exogenous Infection Rates
-  exo.trans.prob.B = seq(0.99, 0.99, length.out = n_scenarios), #
-  exo.trans.prob.H = seq(0.20, 0.30, length.out = n_scenarios),
-  exo.trans.prob.O = seq(0.18, 0.18, length.out = n_scenarios),
-  exo.trans.prob.W = seq(.08, .08, length.out = n_scenarios),
+  # Exogenous Infection Rates
+  exo.trans.prob.B = seq(0.4900, 0.4900, length.out = n_scenarios), #
+  exo.trans.prob.H = seq(0.2000, 0.2000, length.out = n_scenarios),
+  exo.trans.prob.O = seq(0.1725, 0.1725, length.out = n_scenarios),
+  exo.trans.prob.W = seq(0.0900, 0.0900, length.out = n_scenarios),
  #
   # HIV Testing Rate
    hiv.test.rate_1 = seq(0.0038, 0.0038, length.out = n_scenarios),
@@ -209,10 +209,10 @@ scenarios_df <- tibble(
  # hiv.trans.scale_4 = seq(     0.8,      1.2, length.out = n_scenarios)
 
  # This was for calibrating on prevalence
- hiv.trans.scale_1 = seq(     21,       21, length.out = n_scenarios),
- hiv.trans.scale_2 = seq(     2.7,        2.7, length.out = n_scenarios),
- hiv.trans.scale_3 = seq(     3.3,      3.3, length.out = n_scenarios),
- hiv.trans.scale_4 = seq(     1.6,      1.6, length.out = n_scenarios)
+ hiv.trans.scale_1 = seq(       9,     10, length.out = n_scenarios),
+ hiv.trans.scale_2 = seq(     5.4,      5.6, length.out = n_scenarios),
+ hiv.trans.scale_3 = seq(     3.0,      3.2, length.out = n_scenarios),
+ hiv.trans.scale_4 = seq(     1,      1, length.out = n_scenarios)
 
   # tt.partial.supp.prob_1 = c(0, .2),
   # tt.partial.supp.prob_2 = c(0, .2),
@@ -270,7 +270,7 @@ start_time <- Sys.time()
 
 EpiModelHPC::netsim_scenarios(
   path_to_est, param, init, control, scenarios_list,
-  n_rep = 10,
+  n_rep = 1,
   n_cores = 10,
   output_dir = "data/intermediate/calibration",
   #libraries = NULL,
@@ -282,3 +282,5 @@ end_time <- Sys.time()
 
 # Check the files produced
 list.files("data/intermediate/calibration")
+
+

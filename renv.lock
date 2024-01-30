@@ -1,6 +1,6 @@
 {
   "R": {
-    "Version": "4.3.2",
+    "Version": "4.3.1",
     "Repositories": [
       {
         "Name": "CRAN",
@@ -13,13 +13,13 @@
       "Package": "ARTnet",
       "Version": "2.7.0",
       "Source": "GitHub",
+      "Remotes": "github::EpiModel/ARTnetData@main, github::EpiModel/EpiModelHIV-p@main",
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
-      "RemoteUsername": "EpiModel",
       "RemoteRepo": "ARTnet",
+      "RemoteUsername": "EpiModel",
       "RemoteRef": "main",
       "RemoteSha": "b07e445f390f312389e56cfb4a67ed2a89b470b1",
-      "Remotes": "github::EpiModel/ARTnetData@main, github::EpiModel/EpiModelHIV-p@main",
       "Requirements": [
         "ARTnetData",
         "EpiModel",
@@ -68,8 +68,8 @@
       "Package": "EpiModel",
       "Version": "2.3.2",
       "Source": "GitHub",
-      "RemoteType": "github",
       "Remotes": "github::statnet/statnet.common@4.8.0, github::statnet/ergm@4.4.0, github::statnet/ergm.ego@1.0.1, github::statnet/tergm@4.1.1",
+      "RemoteType": "github",
       "RemoteHost": "api.github.com",
       "RemoteRepo": "EpiModel",
       "RemoteUsername": "EpiModel",
@@ -109,13 +109,13 @@
       "Package": "EpiModelHIV",
       "Version": "2.6.0",
       "Source": "GitHub",
+      "Remotes": "github::EpiModel/ARTnet@main, github::EpiModel/ARTnetData@main, github::statnet/statnet.common@4.8.0, github::statnet/ergm@4.4.0, github::statnet/ergm.ego@1.0.1, github::statnet/tergm@4.1.1, github::EpiModel/EpiModel@v2.3.x",
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
-      "RemoteUsername": "EpiModel",
       "RemoteRepo": "EpiModelHIV-p",
+      "RemoteUsername": "EpiModel",
       "RemoteRef": "main",
       "RemoteSha": "fbe14d51337e4d4ab57b380f336d6e576aafafcc",
-      "Remotes": "github::EpiModel/ARTnet@main, github::EpiModel/ARTnetData@main, github::statnet/statnet.common@4.8.0, github::statnet/ergm@4.4.0, github::statnet/ergm.ego@1.0.1, github::statnet/tergm@4.1.1, github::EpiModel/EpiModel@v2.3.x",
       "Requirements": [
         "ARTnet",
         "ARTnetData",
@@ -136,8 +136,8 @@
       "Package": "EpiModelHPC",
       "Version": "2.2.0",
       "Source": "GitHub",
-      "RemoteType": "github",
       "Remotes": "github::EpiModel/slurmworkflow, github::EpiModel/swfcalib",
+      "RemoteType": "github",
       "RemoteHost": "api.github.com",
       "RemoteRepo": "EpiModelHPC",
       "RemoteUsername": "EpiModel",
@@ -433,9 +433,9 @@
       "RemoteHost": "api.github.com",
       "RemoteRepo": "chiSTIGmodules",
       "RemoteUsername": "Tom-Wolff",
-      "RemoteRef": "HEAD",
-      "RemoteSha": "0a90c19a18aaff4c9b4b4b7ed66ca16ca8e87782",
-      "Hash": "a6a813e4da24368642d4363f176a83f4"
+      "RemoteRef": "main",
+      "RemoteSha": "9430f82a43446ac40fae5bd5009f9495361aa128",
+      "Hash": "2d47b087633c072d3ed9a26cb38ec5d5"
     },
     "cli": {
       "Package": "cli",
@@ -2074,8 +2074,8 @@
       "Package": "swfcalib",
       "Version": "0.0.0.9000",
       "Source": "GitHub",
-      "RemoteType": "github",
       "Remotes": "github::EpiModel/slurmworkflow",
+      "RemoteType": "github",
       "RemoteHost": "api.github.com",
       "RemoteRepo": "swfcalib",
       "RemoteUsername": "EpiModel",

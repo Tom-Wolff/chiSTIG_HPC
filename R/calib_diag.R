@@ -1,202 +1,91 @@
-##
-## 11. Epidemic Model Parameter Calibration, Processing of the simulation files
-##
-
-# Read in data
-
-# Venues Model
-#
-# sim_files <- list.files(paste(getwd(), "/data/intermediate/calibration", sep = ""))
-# sim_dir <- paste(getwd(), "/data/intermediate/", sep = "")
-# sim_files <- paste(sim_dir, sim_files, sep = "")
-#
-#
-# for (i in 1:length(sim_files)) {
-#
-#   this_sim <- readRDS(sim_files[[i]])
-#
-#   this_sim <- this_sim %>% as_tibble() %>%
-#     mutate_calibration_targets() %>%
-#     mutate(dep.total = dep.gen + dep.AIDS.off.tx + dep.AIDS.on.tx) %>%
-#     mutate(total.incid = incid + exo.incid) %>%
-#     mutate(prop_unprotected_discordant = num_unprotected_disc_acts/num_disc_acts) %>%
-#     mutate(cc.dx.B = ifelse(is.nan(cc.dx.B), 0, cc.dx.B),
-#            cc.dx.H = ifelse(is.nan(cc.dx.H), 0, cc.dx.H),
-#            cc.dx.O = ifelse(is.nan(cc.dx.O), 0, cc.dx.O),
-#            cc.dx.W = ifelse(is.nan(cc.dx.W), 0, cc.dx.W),
-#
-#            num_diagnosed.B = cc.dx.B*i.num.B,
-#            num_diagnosed.H = cc.dx.H*i.num.H,
-#            num_diagnosed.O = cc.dx.O*i.num.O,
-#            num_diagnosed.W = cc.dx.W*i.num.W,
-#            num_diagnosed = num_diagnosed.B + num_diagnosed.H + num_diagnosed.O
-#            + num_diagnosed.W,
-#            cc.dx = num_diagnosed/i.num) %>%
-#     mutate(cc.vsupp.B = ifelse(is.nan(cc.vsupp.B), 0, cc.vsupp.B),
-#            cc.vsupp.H = ifelse(is.nan(cc.vsupp.H), 0, cc.vsupp.H),
-#            cc.vsupp.O = ifelse(is.nan(cc.vsupp.O), 0, cc.vsupp.O),
-#            cc.vsupp.W = ifelse(is.nan(cc.vsupp.W), 0, cc.vsupp.W),
-#
-#            num_supp.B = num_diagnosed.B*cc.vsupp.B,
-#            num_supp.H = num_diagnosed.H*cc.vsupp.H,
-#            num_supp.O = num_diagnosed.O*cc.vsupp.O,
-#            num_supp.W = num_diagnosed.W*cc.vsupp.W,
-#            num_supp = num_supp.B + num_supp.H + num_supp.O
-#            + num_supp.W,
-#            cc.vsupp = num_supp/num_diagnosed) %>%
-#     mutate(n_edges_total = n_edges_main + n_edges_casual + n_edges_onetime) %>%
-#     mutate(n_edges_main.RHom = n_edges_main.B + n_edges_main.H + n_edges_main.O + n_edges_main.W,
-#            n_edges_casual.RHom = n_edges_casual.B + n_edges_casual.H + n_edges_casual.O + n_edges_casual.W,
-#            n_edges_onetime.RHom = n_edges_onetime.B + n_edges_onetime.H + n_edges_onetime.O + n_edges_onetime.W,
-#            n_edges_total.RHom = n_edges_total.B + n_edges_total.H + n_edges_total.O + n_edges_total.W,
-#            n_edges_total = n_edges_main + n_edges_casual + n_edges_onetime,
-#
-#            prop_edges_main.RHom = n_edges_main.RHom/n_edges_main,
-#            prop_edges_casual.RHom = n_edges_casual.RHom/n_edges_casual,
-#            prop_edges_onetime.RHom = n_edges_onetime.RHom/n_edges_onetime,
-#            prop_edges_total.RHom = n_edges_total.RHom/n_edges_total) %>%
-#     mutate(gen_dep_rate = dep.gen / num,
-#            AIDStx_dep_rate = dep.AIDS.on.tx/num,
-#            AIDSnotx_dep_rate = dep.AIDS.off.tx/num) %>%
-#     mutate(sim = sim_files[[i]], venues_treat = TRUE) %>%
-#     select(sim, venues_treat, everything())
-#
-#   if (i == 1) {
-#     sim_data <- this_sim
-#   } else {
-#     sim_data <- dplyr::bind_rows(sim_data, this_sim)
-#   }
-#
-# }
-#
-# sim_data <- sim_data %>%
-#   mutate(treat = case_when(stringr::str_detect(sim_data$sim, "/app_") == TRUE ~ "Apps Only",
-#                            stringr::str_detect(sim_data$sim, "/venue_sim") == TRUE ~ "Venues Only",
-#                            stringr::str_detect(sim_data$sim, "/venue_app_") == TRUE ~ "Venues and Apps",
-#                            TRUE ~ NA)) %>%
-#   dplyr::select(sim, treat, everything())
-#
-# sim_data1 <- sim_data
-#
-# # Adrien says to just look at the last 52 weeks
-# # sim_data <- sim_data %>%
-# #   filter(time > (max(time)-52))
-#
-# saveRDS(sim_data, paste(sim_dir, "venues_runs_oct24.rds", sep = ""))
-#
-#
-#
-# # Control Model
-#
-# sim_files <- list.files(paste(getwd(), "/calib1/control/", sep = ""))
-# sim_dir <- paste(getwd(), "/calib1/control/", sep = "")
-# sim_files <- paste(sim_dir, sim_files, sep = "")
-#
-# for (i in 1:length(sim_files)) {
-#
-#   this_sim <- readRDS(sim_files[[i]])
-#
-#   this_sim <- this_sim %>% as_tibble() %>%
-#     mutate_calibration_targets() %>%
-#     mutate(dep.total = dep.gen + dep.AIDS.off.tx + dep.AIDS.on.tx) %>%
-#     mutate(total.incid = incid + exo.incid) %>%
-#     mutate(prop_unprotected_discordant = num_unprotected_disc_acts/num_disc_acts) %>%
-#     mutate(cc.dx.B = ifelse(is.nan(cc.dx.B), 0, cc.dx.B),
-#            cc.dx.H = ifelse(is.nan(cc.dx.H), 0, cc.dx.H),
-#            cc.dx.O = ifelse(is.nan(cc.dx.O), 0, cc.dx.O),
-#            cc.dx.W = ifelse(is.nan(cc.dx.W), 0, cc.dx.W),
-#
-#            num_diagnosed.B = cc.dx.B*i.num.B,
-#            num_diagnosed.H = cc.dx.H*i.num.H,
-#            num_diagnosed.O = cc.dx.O*i.num.O,
-#            num_diagnosed.W = cc.dx.W*i.num.W,
-#            num_diagnosed = num_diagnosed.B + num_diagnosed.H + num_diagnosed.O
-#            + num_diagnosed.W,
-#            cc.dx = num_diagnosed/i.num) %>%
-#     mutate(cc.vsupp.B = ifelse(is.nan(cc.vsupp.B), 0, cc.vsupp.B),
-#            cc.vsupp.H = ifelse(is.nan(cc.vsupp.H), 0, cc.vsupp.H),
-#            cc.vsupp.O = ifelse(is.nan(cc.vsupp.O), 0, cc.vsupp.O),
-#            cc.vsupp.W = ifelse(is.nan(cc.vsupp.W), 0, cc.vsupp.W),
-#
-#            num_supp.B = num_diagnosed.B*cc.vsupp.B,
-#            num_supp.H = num_diagnosed.H*cc.vsupp.H,
-#            num_supp.O = num_diagnosed.O*cc.vsupp.O,
-#            num_supp.W = num_diagnosed.W*cc.vsupp.W,
-#            num_supp = num_supp.B + num_supp.H + num_supp.O
-#            + num_supp.W,
-#            cc.vsupp = num_supp/num_diagnosed) %>%
-#     mutate(n_edges_total = n_edges_main + n_edges_casual + n_edges_onetime) %>%
-#     mutate(n_edges_main.RHom = n_edges_main.B + n_edges_main.H + n_edges_main.O + n_edges_main.W,
-#            n_edges_casual.RHom = n_edges_casual.B + n_edges_casual.H + n_edges_casual.O + n_edges_casual.W,
-#            n_edges_onetime.RHom = n_edges_onetime.B + n_edges_onetime.H + n_edges_onetime.O + n_edges_onetime.W,
-#            n_edges_total.RHom = n_edges_total.B + n_edges_total.H + n_edges_total.O + n_edges_total.W,
-#            n_edges_total = n_edges_main + n_edges_casual + n_edges_onetime,
-#
-#            prop_edges_main.RHom = n_edges_main.RHom/n_edges_main,
-#            prop_edges_casual.RHom = n_edges_casual.RHom/n_edges_casual,
-#            prop_edges_onetime.RHom = n_edges_onetime.RHom/n_edges_onetime,
-#            prop_edges_total.RHom = n_edges_total.RHom/n_edges_total) %>%
-#     mutate(gen_dep_rate = dep.gen / num,
-#            AIDStx_dep_rate = dep.AIDS.on.tx/num,
-#            AIDSnotx_dep_rate = dep.AIDS.off.tx/num) %>%
-#     mutate(sim = sim_files[[i]], treat = "Control Model", venues_treat = FALSE) %>%
-#     select(sim, treat, venues_treat, everything())
-#
-#   if (i == 1) {
-#     sim_data <- this_sim
-#   } else {
-#     sim_data <- dplyr::bind_rows(sim_data, this_sim)
-#   }
-#
-# }
-#
-# sim_data2 <- sim_data
-
-
-# sim_data <- sim_data %>%
-#   filter(time > (max(time)-52))
-
-saveRDS(sim_data, paste(sim_dir, "novenues_runs_oct23.rds", sep = ""))
-
-
-sim_targets <- tibble::as_tibble(sim) %>%
-  mutate_calibration_targets() %>%
-  mutate(cc.dx.B = ifelse(is.nan(cc.dx.B), 0, cc.dx.B),
-         cc.dx.H = ifelse(is.nan(cc.dx.H), 0, cc.dx.H),
-         cc.dx.O = ifelse(is.nan(cc.dx.O), 0, cc.dx.O),
-         cc.dx.W = ifelse(is.nan(cc.dx.W), 0, cc.dx.W),
-
-         num_diagnosed.B = cc.dx.B*i.num.B,
-         num_diagnosed.H = cc.dx.H*i.num.H,
-         num_diagnosed.O = cc.dx.O*i.num.O,
-         num_diagnosed.W = cc.dx.W*i.num.W,
-         num_diagnosed = num_diagnosed.B + num_diagnosed.H + num_diagnosed.O
-         + num_diagnosed.W,
-         cc.dx = num_diagnosed/i.num)
-
 # Libraries --------------------------------------------------------------------
 library("tidyverse")
 library("future.apply")
 library("EpiModelHIV")
 
-# data_oct24 <- readRDS("~/Desktop/chistig_debug/all_data_oct24.rds")
+# Data ------------------------------------------------------------------------
+#sim_targets <- readRDS("./data/intermediate/alldata_oct26.rds")
+netstats <- readRDS("./data/intermediate/estimates/netstats-novenues-local.rds")
 
+# Necessary files
+context <- "local"
+est_dir <- "blah"
+prep_start = 52*2
+source("./R/utils-chistig_basic_inputs.R") # generate `path_to_est`, `param` and `init`
+# path_to_est <- "./data/intermediate/estimates/basic_netest-local.rds"
+# path_to_est      <- "/Users/wms1212/Desktop/ChiSTIG_model/epimodel/data/intermediate/estimates/venue_only_netest-local.rds"
+path_to_est <- "./data/intermediate/estimates/basic_netest-local.rds"
+# Controls
+source("./R/utils-targets.R")
 
-# Custom function for generating summary plots
-target_plot <- function(data, group, var, benchmark = NULL, title = NULL) {
+#
+
+load_diag <- function(this_dir, nsim = 1) {
+
+  for (i in 1:nsim) {
+
+    sim_dir <- paste("/data/intermediate/calibration/sim__", i, "__1.rds", sep = "")
+
+    # this_targets <- readRDS(paste(this_dir, sim_dir, sep = ""))
+
+    this_targets <- tibble::as_tibble(readRDS(paste(this_dir, sim_dir, sep = ""))) %>%
+      mutate_calibration_targets() %>%
+      mutate(cc.dx.B = ifelse(is.nan(cc.dx.B), 0, cc.dx.B),
+             cc.dx.H = ifelse(is.nan(cc.dx.H), 0, cc.dx.H),
+             cc.dx.O = ifelse(is.nan(cc.dx.O), 0, cc.dx.O),
+             cc.dx.W = ifelse(is.nan(cc.dx.W), 0, cc.dx.W),
+
+             num_diagnosed.B = cc.dx.B*i.num.B,
+             num_diagnosed.H = cc.dx.H*i.num.H,
+             num_diagnosed.O = cc.dx.O*i.num.O,
+             num_diagnosed.W = cc.dx.W*i.num.W,
+             num_diagnosed = num_diagnosed.B + num_diagnosed.H + num_diagnosed.O
+             + num_diagnosed.W,
+             cc.dx = num_diagnosed/i.num,
+             sim = sim_dir)
+
+    if (i == 1) {
+      sim_targets <- this_targets
+    } else {
+      sim_targets <- dplyr::bind_rows(sim_targets, this_targets)
+    }
+  }
+
+  return(sim_targets)
+}
+
+sim_targets <- load_diag(this_dir = getwd(), nsim = 3)
+
+# Custom function for generating summary plots ---------------------------------
+target_plot <- function(data, group, var, benchmark = NULL, title = NULL,
+                        target_range = NULL) {
 
   # Create placeholder of variable we need
   data2 <- data[, c("time", group, var)]
   colnames(data2) <- c("time", "venues_treat", "this_var")
 
-  this_plot <- data2 %>%
-    group_by(venues_treat, time) %>%
-    summarize(this_var = median(this_var)) %>%
-    dplyr::ungroup() %>%
-    ggplot(aes(x = time, y = this_var, color = venues_treat)) +
-    geom_line() +
-    theme_minimal() +
-    labs(y = var)
+  if (is.null(target_range)) {
+
+        this_plot <- data2 %>%
+          group_by(venues_treat, time) %>%
+          summarize(this_var = median(this_var)) %>%
+          dplyr::ungroup() %>%
+          ggplot(aes(x = time, y = this_var, color = as.factor(venues_treat))) +
+          geom_line() +
+          theme_minimal() +
+          labs(y = var)
+
+  } else {
+        this_plot <- data2 %>%
+          group_by(venues_treat, time) %>%
+          summarize(this_var = median(this_var)) %>%
+          dplyr::ungroup() %>%
+          ggplot(aes(x = time, y = this_var, color = as.factor(venues_treat))) +
+          geom_ribbon(aes(x = time, ymin = sort(target_range)[[1]], ymax = sort(target_range)[[2]]), fill = "grey", alpha = 0.15, linetype = 0) +
+          geom_line() +
+          theme_minimal() +
+          labs(y = var)
+  }
 
   if (!is.null(benchmark)) {
     this_plot <- this_plot +
@@ -211,195 +100,11 @@ target_plot <- function(data, group, var, benchmark = NULL, title = NULL) {
   return(this_plot)
 }
 
-# Settings ---------------------------------------------------------------------
-source("./R/utils-0_project_settings.R")
-context <- if (!exists("context")) "local" else "hpc"
 
-if (context == "local") {
-  plan(sequential)
-} else if (context == "hpc") {
-  plan(multisession, workers = ncores)
-} else  {
-  stop("The `context` variable must be set to either 'local' or 'hpc'")
-}
-
-# ------------------------------------------------------------------------------
-# Necessary files
-source("R/utils-chistig_basic_inputs.R") # generate `path_to_est`, `param` and `init`
-path_to_est <- "./data/intermediate/estimates/basic_netest-local.rds"
-source("./R/utils-targets.R")
-batches_infos <- EpiModelHPC::get_scenarios_batches_infos(calib_dir)
-
-# How many simulations are we comparing
-num_batches <- 2
-# Later on we'll use `list.files` to automate this:
-
-# file_vec <- c("./data/intermediate/calibration/sim__1__1.rds",
-#               "./data/intermediate/calibration/sim__2__1.rds",
-#              "./data/intermediate/calibration/sim__3__1.rds",
-#                "./data/intermediate/calibration/sim__4__1.rds",
-#                "./data/intermediate/calibration/sim__5__1.rds"
-#               )
-
-file_vec <- batches_infos$file_name[1:num_batches]
-
-
-for (i in 1:length(file_vec)) {
-  this_sim <- readRDS(file_vec[[i]]) %>%
-    as_tibble() %>%
-    mutate_calibration_targets() %>%
-    mutate(cc.dx.B = ifelse(is.nan(cc.dx.B), 0, cc.dx.B),
-           cc.dx.H = ifelse(is.nan(cc.dx.H), 0, cc.dx.H),
-           cc.dx.O = ifelse(is.nan(cc.dx.O), 0, cc.dx.O),
-           cc.dx.W = ifelse(is.nan(cc.dx.W), 0, cc.dx.W),
-
-           num_diagnosed.B = cc.dx.B*i.num.B,
-           num_diagnosed.H = cc.dx.H*i.num.H,
-           num_diagnosed.O = cc.dx.O*i.num.O,
-           num_diagnosed.W = cc.dx.W*i.num.W,
-           num_diagnosed = num_diagnosed.B + num_diagnosed.H + num_diagnosed.O
-           + num_diagnosed.W,
-           cc.dx = num_diagnosed/i.num,
-           sim = file_vec[[i]])
-
-  if (i == 1) {
-    sim_targets <- this_sim
-  } else {
-    sim_targets <- bind_rows(sim_targets, this_sim)
-  }
-
-}
-
-
-# Population Size
-
-starting_n <- length(netstats$attr$age)
-
-sim_targets %>% ggplot(aes(x = time, y = num, color = as.factor(sim))) +
-  geom_line(alpha = .4) +
-  ggtitle("Plot 1: Population Size") +
-  theme_minimal() +
-  geom_hline(aes(yintercept = 11612, color = "red"))
-
-
-# Sam says we should be checking in this order:
-# 1. Prep Usage (as this indirectly affects diagnosis given that PrEP users
-# often get tested 4 times of year as a matter of course)
-##### Right now our simulation doesn't have any PrEP use whatsoever. Do we want
-##### to worry about this at present?
-
-
-
-################################################################################
-# 2. Diagnosis - Knowing one's HIV status affects whether or not they adopt ART,
-# so we need to meet the diagnosis benchmarks BEFORE trying to calibrate ART and
-# viral suppression
-
-# Prop Diagnosed
-
-sim_targets %>%
-  ggplot(aes(x = time, y = cc.dx, color = as.factor(sim))) +
-  geom_line(alpha = .4) +
-  geom_hline(aes(yintercept = 0.814, color = "red")) +
-  theme_minimal() +
-  ggtitle("Plot 1: Proportion of HIV+ that are Diagnosed")
-
-
-### Black
-sim_targets %>%
-  ggplot(aes(x = time, y = cc.dx.B, as.factor(sim))) +
-  geom_line(alpha = .4) +
-  geom_hline(aes(yintercept = 0.804, color = "red")) +
-  theme_minimal() +
-  ggtitle("Plot 2: Proportion of HIV+ that are Diagnosed (Black)")
-
-
-### Hispanic
-sim_targets %>%
-  ggplot(aes(x = time, y = cc.dx.H, as.factor(sim))) +
-  geom_line(alpha = .4) +
-  geom_hline(aes(yintercept = 0.799, color = "red")) +
-  theme_minimal() +
-  ggtitle("Plot 3: Proportion of HIV+ that are Diagnosed (Hispanic)")
-
-
-sim_targets %>%
-  ggplot(aes(x = time, y = cc.dx.O, color = as.factor(sim))) +
-  geom_line(alpha = .4) +
-  geom_hline(aes(yintercept = 0.826, color = "red")) +
-  theme_minimal() +
-  ggtitle("Plot 4: Proportion of HIV+ that are Diagnosed (Other)")
-
-
-sim_targets %>%
-  ggplot(aes(x = time, y = cc.dx.W, as.factor(sim))) +
-  geom_line(alpha = .4) +
-  geom_hline(aes(yintercept = 0.881, color = "red")) +
-  theme_minimal() +
-  ggtitle("Plot 5: Proportion of HIV+ that are Diagnosed (White)")
-
-
-################################################################################
-# 3. Treatment (and Viral Suppression)
-# Sam says that for the purposes of simplicity, we assume all folks on ART are
-# in full viral suppression category. As far as calibration goes, we keep disengagement
-# from treatment rates fixed and calibrate on reinitiation.
-###### First we want proportions linked to care, then we do reinitiation
-sim_targets %>% ggplot(aes(x = time, y = cc.linked1m.B, as.factor(sim))) +
-  geom_line(alpha = .4) +
-  geom_hline(aes(yintercept = .828, color = "red")) +
-  theme_minimal() +
-  ggtitle("Plot 6: Proportion of HIV+ Nodes Linked to Care within One Month (Black)")
-
-
-sim_targets %>% ggplot(aes(x = time, y = cc.linked1m.H, as.factor(sim))) +
-  geom_line(alpha = .4) +
-  geom_hline(aes(yintercept = 0.867, color = "red")) +
-  theme_minimal() +
-  ggtitle("Plot 6: Proportion of HIV+ Nodes Linked to Care within One Month (Hispanic)")
-
-sim_targets %>% ggplot(aes(x = time, y = cc.linked1m.O, as.factor(sim))) +
-  geom_line(alpha = .4) +
-  geom_hline(aes(yintercept = 0.875, color = "red")) +
-  theme_minimal() +
-  ggtitle("Plot 6: Proportion of HIV+ Nodes Linked to Care within One Month (Other)")
-
-sim_targets %>% ggplot(aes(x = time, y = cc.linked1m.W, as.factor(sim))) +
-  geom_line(alpha = .4) +
-  geom_hline(aes(yintercept = 0.936, color = "red")) +
-  theme_minimal() +
-  ggtitle("Plot 6: Proportion of HIV+ Nodes Linked to Care within One Month (White)")
-
-########## Proportion viral suppressed
-sim_targets %>% ggplot(aes(x = time, y = cc.vsupp.B, as.factor(sim))) +
-  geom_line(alpha = .4) +
-  geom_hline(aes(yintercept = 0.571, color = "red")) +
-  theme_minimal() +
-  ggtitle("Plot 6: Proportion of HIV+ Nodes with Viral Suppression (Black)")
-sim_targets$cc.vsupp.H
-sim_targets %>% ggplot(aes(x = time, y = cc.vsupp.H, color = as.factor(sim))) +
-  geom_line(alpha = .4) +
-  geom_hline(aes(yintercept = 0.675, color = "red")) +
-  theme_minimal() +
-  ggtitle("Plot 7: Proportion of HIV+ Nodes with Viral Suppression\n(Hispanic)")
- sim_targets$cc.vsupp.O
-sim_targets %>% ggplot(aes(x = time, y = cc.vsupp.O, color = as.factor(sim))) +
-  geom_line(alpha = .4) +
-  geom_hline(aes(yintercept = 0.586, color = "red")) +
-  theme_minimal() +
-  ggtitle("Plot 8: Proportion of HIV+ Nodes with Viral Suppression\n(Other)")
-sim_targets$cc.vsupp.W
-sim_targets %>% ggplot(aes(x = time, y = cc.vsupp.H, color = as.factor(sim))) +
-  geom_line(alpha = .4) +
-  geom_hline(aes(yintercept = 0.617, color = "red")) +
-  theme_minimal() +
-  ggtitle("Plot 9: Proportion of HIV+ Nodes with Viral Suppression\n(White)")
-
-################################################################################
-# Exogenous Infections
-
+# Annualized Incidence Counts --------------------------------------------------
 
 mean_incid <-  sim_targets %>%
+  # mutate(sim = treat) %>%
   mutate(total.incid.B = incid.B + exo.incid.B,
          total.incid.H = incid.H + exo.incid.H,
          total.incid.O = incid.O + exo.incid.O,
@@ -408,23 +113,39 @@ mean_incid <-  sim_targets %>%
   summarize(incid.B = mean(incid.B),
             exo.incid.B = mean(exo.incid.B),
             total.incid.B = mean(total.incid.B),
+            endo.ir100.B = mean(endo.ir100.B),
+            exo.ir100.B = mean(exo.ir100.B),
+            ir100.B = mean(ir100.B),
 
             incid.H = mean(incid.H),
             exo.incid.H = mean(exo.incid.H),
             total.incid.H = mean(total.incid.H),
+            endo.ir100.H = mean(endo.ir100.H),
+            exo.ir100.H = mean(exo.ir100.H),
+            ir100.H = mean(ir100.H),
 
             incid.O = mean(incid.O),
             exo.incid.O = mean(exo.incid.O),
             total.incid.O = mean(total.incid.O),
+            endo.ir100.O = mean(endo.ir100.O),
+            exo.ir100.O = mean(exo.ir100.O),
+            ir100.O = mean(ir100.O),
 
             incid.W = mean(incid.W),
             exo.incid.W = mean(exo.incid.W),
-            total.incid.W = mean(total.incid.W)) %>%
+            total.incid.W = mean(total.incid.W),
+            endo.ir100.W = mean(endo.ir100.W),
+            exo.ir100.W = mean(exo.ir100.W),
+            ir100.W = mean(ir100.W),
+
+
+
+            ) %>%
   ungroup()
 
 
-for (i in 1:nrow(mean_incid)) {
-  this_row <- mean_incid[i,]
+for (j in 1:nrow(mean_incid)) {
+  this_row <- mean_incid[j,]
   past_year <- mean_incid %>%
     filter(time <= this_row$time & time > (this_row$time-52)) %>%
     filter(sim == this_row$sim)
@@ -432,294 +153,476 @@ for (i in 1:nrow(mean_incid)) {
   sums$sim <- this_row$sim
   sums$time <- this_row$time
 
-  if (i == 1) {
+  if (j == 1) {
     annual_incid <- sums
   } else {
     annual_incid <- dplyr::bind_rows(annual_incid, sums)
   }
 }
 
-target_plot(data = annual_incid,
-            var = "exo.incid.B",
-            group = "sim",
-            benchmark = 32.57621,
-            title = "Annual Exogenous Infections (Black)")
+for (j in 1:nrow(mean_incid)) {
+  this_row <- mean_incid[j,]
+  past_year <- mean_incid %>%
+    filter(time <= this_row$time & time > (this_row$time-52)) %>%
+    filter(sim == this_row$sim)
+  means <- as.data.frame(t(colMeans(past_year[,3:ncol(past_year)])))
+  means$sim <- this_row$sim
+  means$time <- this_row$time
 
-target_plot(data = annual_incid,
-            var = "exo.incid.H",
-            group = "sim",
-            benchmark = .40*64.27536,
-            title = "Annual Exogenous Infections (Hispanic)")
+  if (j == 1) {
+    annual_incid2 <- means
+  } else {
+    annual_incid2 <- dplyr::bind_rows(annual_incid2, means)
+  }
+}
 
-target_plot(data = annual_incid,
+# Filter for last year
+# sim_targets <- sim_targets %>% filter(time > 3000)
+
+# Settings ---------------------------------------------------------------------
+source("./R/utils-0_project_settings.R")
+
+# ------------------------------------------------------------------------------
+# Necessary files
+# source("R/utils-chistig_basic_inputs.R") # generate `path_to_est`, `param` and `init`
+# path_to_est <- "./data/intermediate/estimates/basic_netest-local.rds"
+# source("./R/utils-targets.R")
+
+sim_targets <- sim_targets %>% dplyr::filter(time >= 3000)
+annual_incid <- annual_incid %>% dplyr::filter(time >= 3000)
+annual_incid2 <- annual_incid2 %>% dplyr::filter(time >= 3000)
+
+library(tidyverse)
+# Population Size --------------------------------------------------------------
+i = 1
+
+target_plot(data = sim_targets,
+            group = "sim",
+            var = "num",
+            benchmark = 11612,
+            title = paste("Plot ", i, ": Population Size", sep = ""))
+
+
+# Proportion HIV+ Diagnosed ----------------------------------------------------
+
+i <- i+1
+
+target_plot(data = sim_targets,
+            group = "sim",
+            var = "cc.dx",
+            benchmark = 0.55333,
+            title = paste("Plot ", i, ": Proportion of HIV+ that are Diagnosed", sep = ""))
+
+i <- i+1
+
+target_plot(data = sim_targets,
+            group = "sim",
+            var = "cc.dx.B",
+            benchmark = 0.5465356428,
+            title = paste("Plot ", i, ": Proportion of HIV+ that are Diagnosed (Black)", sep = ""))
+
+
+i <- i+1
+
+target_plot(data = sim_targets,
+            group = "sim",
+            var = "cc.dx.H",
+            benchmark = 0.5431367893,
+            title = paste("Plot ", i, ": Proportion of HIV+ that are Diagnosed (Hispanic)", sep = ""))
+
+i <- i+1
+
+target_plot(data = sim_targets,
+            group = "sim",
+            var = "cc.dx.O",
+            benchmark = 0.5988779867,
+            title = paste("Plot ", i, ": Proportion of HIV+ that are Diagnosed (Other)", sep = ""))
+
+i <- i+1
+
+target_plot(data = sim_targets,
+            group = "sim",
+            var = "cc.dx.W",
+            benchmark = 0.5614905982,
+            title = paste("Plot ", i, ": Proportion of HIV+ that are Diagnosed (White)", sep = ""))
+
+
+
+# Proportion HIV+ Linked to Care in 1st Month ----------------------------------
+
+i <- i+1
+
+target_plot(data = sim_targets,
+            group = "sim",
+            var = "cc.linked1m.B",
+            benchmark = .828,
+            title = paste("Plot ", i, ": Proportion of HIV+ Nodes Linked to Care within One Month (Black)", sep = ""))
+
+
+i <- i+1
+
+target_plot(data = sim_targets,
+            group = "sim",
+            var = "cc.linked1m.H",
+            benchmark = 0.867,
+            title = paste("Plot ", i, ": Proportion of HIV+ Nodes Linked to Care within One Month (Hispanic)", sep = ""))
+
+i <- i+1
+
+target_plot(data = sim_targets,
+            group = "sim",
+            var = "cc.linked1m.O",
+            benchmark = 0.875,
+            title = paste("Plot ", i, ": Proportion of HIV+ Nodes Linked to Care within One Month (Other)", sep = ""))
+
+i <- i+1
+
+target_plot(data = sim_targets,
+            group = "sim",
+            var = "cc.linked1m.W",
+            benchmark = 0.936,
+            title = paste("Plot ", i, ": Proportion of HIV+ Nodes Linked to Care within One Month (White)", sep = ""))
+
+
+# Proportion HIV+ Linked to Care in 1st Month ----------------------------------
+
+
+i <- i+1
+
+target_plot(data = sim_targets,
+            group = "sim",
+            var = "cc.vsupp.B",
+            benchmark = 0.571,
+            title = paste("Plot ", i, ": Proportion of HIV+ Nodes with Viral Suppression (Black)", sep = ""))
+
+
+i <- i+1
+
+target_plot(data = sim_targets,
+            group = "sim",
+            var = "cc.vsupp.H",
+            benchmark = 0.675,
+            title = paste("Plot ", i, ": Proportion of HIV+ Nodes with Viral Suppression (Hispanic)", sep = ""))
+
+i <- i+1
+
+target_plot(data = sim_targets,
+            group = "sim",
+            var = "cc.vsupp.O",
+            benchmark = 0.586,
+            title = paste("Plot ", i, ": Proportion of HIV+ Nodes with Viral Suppression (Other)", sep = ""))
+
+i <- i+1
+
+target_plot(data = sim_targets,
+            group = "sim",
+            var = "cc.vsupp.W",
+            benchmark = 0.617,
+            title = paste("Plot ", i, ": Proportion of HIV+ Nodes with Viral Suppression (White)", sep = ""))
+
+
+# Proportion of Indicated MSM currently using PrEP -----------------------------
+
+i <- i+1
+
+target_plot(data = sim_targets,
+            group = "sim",
+            var = "cc.prep.B",
+            benchmark = 0.350,
+            title = paste("Plot ", i, ": Proportion of Indicated MSM currently using PrEP (Black)", sep = ""))
+
+i <- i+1
+
+target_plot(data = sim_targets,
+            group = "sim",
+            var = "cc.prep.H",
+            benchmark = 0.386,
+            title = paste("Plot ", i, ": Proportion of Indicated MSM currently using PrEP (Hispanic)", sep = ""))
+
+i <- i+1
+
+target_plot(data = sim_targets,
+            group = "sim",
+            var = "cc.prep.O",
+            benchmark = 0.357,
+            title = paste("Plot ", i, ": Proportion of Indicated MSM currently using PrEP (Other)", sep = ""))
+
+i <- i+1
+
+target_plot(data = sim_targets,
+            group = "sim",
+            var = "cc.prep.W",
+            benchmark = 0.368,
+            title = paste("Plot ", i, ": Proportion of Indicated MSM currently using PrEP (White)", sep = ""))
+
+
+# Exogenous Infections ---------------------------------------------------------
+# i <- i+1
+# target_plot(data = annual_incid,
+#             var = "exo.incid.B",
+#             group = "sim",
+#             benchmark = (131/.75)*(.28),
+#             title = paste("Plot ", i, ": Annual Exogenous Infections (Black)", sep = ""))
+# i <- i+1
+# target_plot(data = annual_incid,
+#             var = "exo.incid.H",
+#             group = "sim",
+#             benchmark = (47/.75)*(.40),
+#             title = paste("Plot ", i, ": Annual Exogenous Infections (Hispanic)", sep = ""))
+# i <- i+1
+# target_plot(data = annual_incid,
+#             var = "exo.incid.O",
+#             group = "sim",
+#             benchmark = (14/.75)*(.37),
+#             title = paste("Plot ", i, ": Annual Exogenous Infections (Other)", sep = ""))
+# i <- i+1
+# target_plot(data = annual_incid,
+#             var = "exo.incid.W",
+#             group = "sim",
+#             benchmark = (19/.8)*(.44),
+#             title = paste("Plot ", i, ": Annual Exogenous Infections (White)", sep = ""))
+
+# Exogenous Incidence Rate -----------------------------------------------------
+i <- i+1
+target_plot(data = sim_targets,
+            var = "exo.ir100.B",
+            group = "sim",
+            benchmark = mean(c(1.438, 1.798)),
+            title = paste("Plot ", i, ": Exogenous Incidence Rate (Black)", sep = ""))
+i <- i+1
+target_plot(data = sim_targets,
+            var = "exo.ir100.H",
+            group = "sim",
+            benchmark = mean(c(0.653, 0.816)),
+            title = paste("Plot ", i, ": Exogenous Incidence Rate (Hispanic)", sep = ""))
+i <- i+1
+target_plot(data = sim_targets,
             var = "exo.incid.O",
             group = "sim",
-            benchmark = .37*19.59955,
-            title = "Annual Exogenous Infections (Other)")
-
-
-target_plot(data = annual_incid,
+            benchmark = mean(c(0.506, 0.633)),
+            title = paste("Plot ", i, ": Exogenous Incidence Rate (Other)", sep = ""))
+i <- i+1
+target_plot(data = sim_targets,
             var = "exo.incid.W",
             group = "sim",
-            benchmark = .37*19.59955,
-            title = "Annual Exogenous Infections (White)")
+            benchmark = mean(c(0.257, 0.3212)),
+            title = paste("Plot ", i, ": Exogenous Incidence Rate (White)", sep = ""))
 
-### Endogenous Incidence
-
-target_plot(data = annual_incid,
-            var = "incid.B",
+# Annualized Exogenous Incidence Rate -----------------------------------------
+i <- i+1
+target_plot(data = annual_incid2,
+            var = "exo.ir100.B",
             group = "sim",
-            benchmark = 116.3436*(1-.28),
-            title = "Annual Endogenous Infections (Black)")
+            benchmark = mean(c(1.438, 1.798)),
+            target_range = c(1.438, 1.798),
+            title = paste("Plot ", i, ": Exogenous Incidence Rate (Black, Annualized)", sep = ""))
 
-target_plot(data = annual_incid,
-            var = "incid.H",
+i <- i+1
+target_plot(data = annual_incid2,
+            var = "exo.ir100.H",
             group = "sim",
-            benchmark = 64.27536*(1-.40),
-            title = "Annual Endogenous Infections (Hispanic)")
-
-target_plot(data = annual_incid,
-            var = "incid.O",
+            benchmark = mean(c(0.653, 0.816)),
+            target_range = c(0.653, 0.816),
+            title = paste("Plot ", i, ": Exogenous Incidence Rate (Hispanic, Annualized)", sep = ""))
+i <- i+1
+target_plot(data = annual_incid2,
+            var = "exo.ir100.O",
             group = "sim",
-            benchmark = 19.59955*(1-.37),
-            title = "Annual Endogenous Infections (Other)")
-
-target_plot(data = annual_incid,
-            var = "incid.W",
+            benchmark = mean(c(0.506, 0.633)),
+            target_range = c(0.506, 0.633),
+            title = paste("Plot ", i, ": Exogenous Incidence Rate (Other, Annualized)", sep = ""))
+i <- i+1
+target_plot(data = annual_incid2,
+            var = "exo.ir100.W",
             group = "sim",
-            benchmark = 24.91874*(1-.44),
-            title = "Annual Endogenous Infections (White)")
+            benchmark = mean(c(0.257, 0.3212)),
+            target_range = c(0.257, 0.3212),
+            title = paste("Plot ", i, ": Exogenous Incidence Rate (White, Annualized)", sep = ""))
 
 
-################################################################################
-# 4. Incidence and Prevalence
+# Endogenous Infections --------------------------------------------------------
+# i <- i+1
+# target_plot(data = annual_incid,
+#             var = "incid.B",
+#             group = "sim",
+#             benchmark = (131/.75)*(1-.28),
+#             title = paste("Plot ", i, ": Annual Endogenous Infections (Black)", sep = ""))
+# i <- i+1
+# target_plot(data = annual_incid,
+#             var = "incid.H",
+#             group = "sim",
+#             benchmark = (47/.75)*(1-.40),
+#             title = paste("Plot ", i, ": Annual Endogenous Infections (Hispanic)", sep = ""))
+# i <- i+1
+# target_plot(data = annual_incid,
+#             var = "incid.O",
+#             group = "sim",
+#             benchmark = (14/.75)*(1-.37),
+#             title = paste("Plot ", i, ": Annual Endogenous Infections (Other)", sep = ""))
+# i <- i+1
+# target_plot(data = annual_incid,
+#             var = "incid.W",
+#             group = "sim",
+#             benchmark = (19/.8)*(1-.44),
+#             title = paste("Plot ", i, ": Annual Endogenous Infections (White)", sep = ""))
 
-# Incidence
-sim_targets %>% ggplot(aes(x = time, y = i.prev, color = sim)) +
-  geom_line(alpha = .4) +
-  geom_hline(aes(yintercept = mean(netstats$attr$diag.status), color = "red")) +
-  theme_minimal() +
-  ggtitle("Plot 1: Prevalence, Infected")
+# Endogenous Incidence Rate ----------------------------------------------------
+i <- i+1
+target_plot(data = sim_targets,
+            var = "endo.ir100.B",
+            group = "sim",
+            benchmark = 6.42 - mean(c(1.438, 1.798)),
+            title = paste("Plot ", i, ": Endogenous Incidence Rate (Black)", sep = ""))
+i <- i+1
+target_plot(data = sim_targets,
+            var = "endo.ir100.H",
+            group = "sim",
+            benchmark = 2.04 - mean(c(0.653, 0.816)),
+            title = paste("Plot ", i, ": Endogenous Incidence Rate (Hispanic)", sep = ""))
+i <- i+1
+target_plot(data = sim_targets,
+            var = "endo.ir100.O",
+            group = "sim",
+            benchmark = 1.71 - mean(c(0.506, 0.633)),
+            title = paste("Plot ", i, ": Endogenous Incidence Rate (Other)", sep = ""))
+i <- i+1
+target_plot(data = sim_targets,
+            var = "endo.ir100.W",
+            group = "sim",
+            benchmark = 0.73 - mean(c(0.257, 0.3212)),
+            title = paste("Plot ", i, ": Endogenous Incidence Rate (White)", sep = ""))
 
-
-sim_targets %>% ggplot(aes(x = time, y = i.prev.B, color = sim)) +
-  geom_line(alpha = .4) +
-  geom_hline(aes(yintercept = .354, color = "red")) +
-  theme_minimal() +
-  ggtitle("Plot 2: Prevalence, Infected (Black)")
-
-sim_targets %>% ggplot(aes(x = time, y = i.prev.H, color = sim)) +
-  geom_line(alpha = .4) +
-  geom_hline(aes(yintercept = .114, color = "red")) +
-  theme_minimal() +
-  ggtitle("Plot 3: Prevalence, Infected (Hispanic)")
-
-sim_targets %>% ggplot(aes(x = time, y = i.prev.O, color = sim)) +
-  geom_line(alpha = .4) +
-  geom_hline(aes(yintercept = .103, color = "red")) +
-  theme_minimal() +
-  ggtitle("Plot 4: Prevalence, Infected (Other)")
-
-sim_targets %>% ggplot(aes(x = time, y = i.prev.W, color = sim)) +
-  geom_line(alpha = .4) +
-  geom_hline(aes(yintercept = .106, color = "red")) +
-  theme_minimal() +
-  ggtitle("Plot 2: Prevalence, Infected (White)")
-
-sim_targets %>% ggplot(aes(x = time, y = incid, color = sim)) +
-  geom_line(alpha = .4) +
-  geom_hline(aes(yintercept = 5.08, color = "red")) +
-  theme_minimal() +
-  ggtitle("Plot 3: Weekly Incidence (Endogenous)")
-
-sim_targets %>% dplyr::group_by(sim, time) %>%
-  dplyr::summarise(med_incid = mean(incid, na.rm = TRUE)) %>%
-  ggplot(aes(x = time, y = med_incid, color = sim)) +
-  geom_line(alpha = .4) +
-  geom_hline(aes(yintercept = 5.08, color = "red")) +
-  theme_minimal() +
-  ggtitle("Plot 3: Weekly Incidence (Endogenous)")
-
-sim_targets %>% dplyr::group_by(sim, time) %>%
-  dplyr::summarise(med_incid = mean(exo.incid, na.rm = TRUE)) %>%
-  ggplot(aes(x = time, y = med_incid, color = sim)) +
-  geom_line(alpha = .4) +
-  geom_hline(aes(yintercept = 5.08, color = "red")) +
-  theme_minimal() +
-  ggtitle("Plot 3: Weekly Incidence (Exogenous)")
-
-sim_targets %>%
-  mutate(total.incid = incid + exo.incid) %>%
-  dplyr::group_by(sim, time) %>%
-  dplyr::summarise(med_incid = mean(total.incid, na.rm = TRUE)) %>%
-  ggplot(aes(x = time, y = med_incid, color = sim)) +
-  geom_line(alpha = .4) +
-  geom_hline(aes(yintercept = 5.08, color = "red")) +
-  theme_minimal() +
-  ggtitle("Plot 3: Weekly Incidence (Combined)")
-
-
-sim_targets %>%
-  mutate(total.incid = incid + exo.incid) %>%
-  summarize(mean(total.incid, na.rm = T))
-
-# Black
-sim_targets %>% dplyr::group_by(sim, time) %>%
-  dplyr::summarise(med_incid = mean(incid.B, na.rm = TRUE)) %>%
-  ggplot(aes(x = time, y = med_incid, color = sim)) +
-  geom_line(alpha = .4) +
-  geom_hline(aes(yintercept = 3.02, color = "red")) +
-  theme_minimal() +
-  ggtitle("Plot 3: Weekly Incidence (Black, Endogenous)")
-
-sim_targets %>% dplyr::group_by(sim, time) %>%
-  dplyr::summarise(med_incid = mean(exo.incid.B, na.rm = TRUE)) %>%
-  ggplot(aes(x = time, y = med_incid, color = sim)) +
-  geom_line(alpha = .4) +
-  geom_hline(aes(yintercept = 3.02, color = "red")) +
-  theme_minimal() +
-  ggtitle("Plot 3: Weekly Incidence (Black, Exogenous)")
-
-sim_targets %>%
-  mutate(total.incid = incid.B + exo.incid.B) %>%
-  dplyr::group_by(sim, time) %>%
-  dplyr::summarise(med_incid = mean(total.incid, na.rm = TRUE)) %>%
-  ggplot(aes(x = time, y = med_incid, color = sim)) +
-  geom_line(alpha = .4) +
-  geom_hline(aes(yintercept = 3.02, color = "red")) +
-  theme_minimal() +
-  ggtitle("Plot 6: Weekly Incidence (Black, Combined)")
+# Annualized Endogenous Incidence Rate -----------------------------------------
+i <- i+1
+target_plot(data = annual_incid2,
+            var = "endo.ir100.B",
+            group = "sim",
+            benchmark = 6.42 - mean(c(1.438, 1.798)),
+            target_range = c(4.44-1.438, 9.30-1.798),
+            title = paste("Plot ", i, ": Endogenous Incidence Rate (Black, Annualized)", sep = ""))
+i <- i+1
+target_plot(data = annual_incid2,
+            var = "endo.ir100.H",
+            group = "sim",
+            benchmark = 2.04 - mean(c(0.653, 0.816)),
+            target_range = c(1.10-0.653, 3.79-0.816),
+            title = paste("Plot ", i, ": Endogenous Incidence Rate (Hispanic, Annualized)", sep = ""))
+i <- i+1
+target_plot(data = annual_incid2,
+            var = "endo.ir100.O",
+            group = "sim",
+            benchmark = 1.71 - mean(c(0.506, 0.633)),
+            target_range = c(0.55-0.506, 5.31-0.633),
+            title = paste("Plot ", i, ": Endogenous Incidence Rate (Other, Annualized)", sep = ""))
+i <- i+1
+target_plot(data = annual_incid2,
+            var = "endo.ir100.W",
+            group = "sim",
+            benchmark = 0.73 - mean(c(0.257, 0.3212)),
+            target_range = c(0.24, 2.26-0.3212),
+            title = paste("Plot ", i, ": Endogenous Incidence Rate (White, Annualized)", sep = ""))
 
 
-# Hispanic
-sim_targets %>% dplyr::group_by(sim, time) %>%
-  dplyr::summarise(med_incid = mean(incid.H, na.rm = TRUE)) %>%
-  ggplot(aes(x = time, y = med_incid, color = sim)) +
-  geom_line(alpha = .4) +
-  geom_hline(aes(yintercept = 1.15, color = "red")) +
-  theme_minimal() +
-  ggtitle("Plot 3: Weekly Incidence (Hispanic, Endogenous)")
+# Total Incidence Rate (Exogenous + Endogenous) --------------------------------
+i <- i+1
+target_plot(data = sim_targets,
+            var = "ir100.B",
+            group = "sim",
+            benchmark = mean(6.42),
+            title = paste("Plot ", i, ": Endogenous Incidence Rate (Black)", sep = ""))
+i <- i+1
+target_plot(data = sim_targets,
+            var = "ir100.H",
+            group = "sim",
+            benchmark = mean(2.04),
+            title = paste("Plot ", i, ": Endogenous Incidence Rate (Hispanic)", sep = ""))
+i <- i+1
+target_plot(data = sim_targets,
+            var = "ir100.O",
+            group = "sim",
+            benchmark = mean(1.71),
+            title = paste("Plot ", i, ": Endogenous Incidence Rate (Other)", sep = ""))
+i <- i+1
+target_plot(data = sim_targets,
+            var = "ir100.W",
+            group = "sim",
+            benchmark = mean(0.73),
+            title = paste("Plot ", i, ": Endogenous Incidence Rate (White)", sep = ""))
 
-sim_targets %>% dplyr::group_by(sim, time) %>%
-  dplyr::summarise(med_incid = mean(exo.incid.H, na.rm = TRUE)) %>%
-  ggplot(aes(x = time, y = med_incid, color = sim)) +
-  geom_line(alpha = .4) +
-  geom_hline(aes(yintercept = 1.15, color = "red")) +
-  theme_minimal() +
-  ggtitle("Plot 3: Weekly Incidence (Black, Exogenous)")
-
-sim_targets %>%
-  mutate(total.incid = incid.H + exo.incid.H) %>%
-  dplyr::group_by(sim, time) %>%
-  dplyr::summarise(med_incid = mean(total.incid, na.rm = TRUE)) %>%
-  ggplot(aes(x = time, y = med_incid, color = sim)) +
-  geom_line(alpha = .4) +
-  geom_hline(aes(yintercept = 1.15, color = "red")) +
-  theme_minimal() +
-  ggtitle("Plot 7: Weekly Incidence (Hispanic, Combined)")
-
-
-# Other
-sim_targets %>% dplyr::group_by(sim, time) %>%
-  dplyr::summarise(med_incid = mean(incid.O, na.rm = TRUE)) %>%
-  ggplot(aes(x = time, y = med_incid, color = sim)) +
-  geom_line(alpha = .4) +
-  geom_hline(aes(yintercept = .31, color = "red")) +
-  theme_minimal() +
-  ggtitle("Plot 3: Weekly Incidence (Other, Endogenous)")
-
-sim_targets %>% dplyr::group_by(sim, time) %>%
-  dplyr::summarise(med_incid = mean(exo.incid.O, na.rm = TRUE)) %>%
-  ggplot(aes(x = time, y = med_incid, color = sim)) +
-  geom_line(alpha = .4) +
-  geom_hline(aes(yintercept = .31, color = "red")) +
-  theme_minimal() +
-  ggtitle("Plot 3: Weekly Incidence (Other, Exogenous)")
-
-sim_targets %>%
-  mutate(total.incid = incid.O + exo.incid.O) %>%
-  dplyr::group_by(sim, time) %>%
-  dplyr::summarise(med_incid = mean(total.incid, na.rm = TRUE)) %>%
-  ggplot(aes(x = time, y = med_incid, color = sim)) +
-  geom_line(alpha = .4) +
-  geom_hline(aes(yintercept = .31, color = "red")) +
-  theme_minimal() +
-  ggtitle("Plot 8: Weekly Incidence (Other, Combined)")
-
-# White
-sim_targets %>% dplyr::group_by(sim, time) %>%
-  dplyr::summarise(med_incid = mean(incid.W, na.rm = TRUE)) %>%
-  ggplot(aes(x = time, y = med_incid, color = sim)) +
-  geom_line(alpha = .4) +
-  geom_hline(aes(yintercept = .6, color = "red")) +
-  theme_minimal() +
-  ggtitle("Plot 3: Weekly Incidence (White, Endogenous)")
-
-sim_targets %>% dplyr::group_by(sim, time) %>%
-  dplyr::summarise(med_incid = mean(exo.incid.W, na.rm = TRUE)) %>%
-  ggplot(aes(x = time, y = med_incid, color = sim)) +
-  geom_line(alpha = .4) +
-  geom_hline(aes(yintercept = .6, color = "red")) +
-  theme_minimal() +
-  ggtitle("Plot 3: Weekly Incidence (White, Exogenous)")
-
-sim_targets %>%
-  mutate(total.incid = incid.W + exo.incid.W) %>%
-  dplyr::group_by(sim, time) %>%
-  dplyr::summarise(med_incid = mean(total.incid, na.rm = TRUE)) %>%
-  ggplot(aes(x = time, y = med_incid, color = sim)) +
-  geom_line(alpha = .4) +
-  geom_hline(aes(yintercept = .6, color = "red")) +
-  theme_minimal() +
-  ggtitle("Plot 9: Weekly Incidence (White, Combined)")
+# Annualized Total Incidence Rate ----------------------------------------------
+i <- i+1
+target_plot(data = annual_incid2,
+            var = "ir100.B",
+            group = "sim",
+            benchmark = 6.42,
+            target_range = c(4.44, 9.30),
+            title = paste("Plot ", i, ": Total Incidence Rate (Black, Annualized)", sep = ""))
+i <- i+1
+target_plot(data = annual_incid2,
+            var = "ir100.H",
+            group = "sim",
+            benchmark = 2.04,
+            target_range = c(1.10, 3.79),
+            title = paste("Plot ", i, ": Total Incidence Rate (Hispanic, Annualized)", sep = ""))
+i <- i+1
+target_plot(data = annual_incid2,
+            var = "ir100.O",
+            group = "sim",
+            benchmark = 1.71,
+            target_range = c(0.55, 5.31),
+            title = paste("Plot ", i, ": Total Incidence Rate (Other, Annualized)", sep = ""))
+i <- i+1
+target_plot(data = annual_incid2,
+            var = "ir100.W",
+            group = "sim",
+            benchmark = 0.73,
+            target_range = c(0.24, 2.26),
+            title = paste("Plot ", i, ": Total Incidence Rate (White, Annualized)", sep = ""))
 
 
+# Prevalence -------------------------------------------------------------------
+se_prop <- function(p, n) {
+  se <- sqrt((p*(1-p))/n)
+  return(c((p-1.95*se), (p+1.95*se)))
+}
 
-sim_targets %>% ggplot(aes(x = time, y = exo.incid, color = sim)) +
-  geom_line(alpha = .4) +
-  # geom_hline(aes(yintercept = 5.08, color = "red")) +
-  theme_minimal() +
-  ggtitle("Plot 4: Weekly Incidence (Exogenous)")
+i <- i+1
+target_plot(data = sim_targets,
+            var = "i.prev",
+            group = "sim",
+            benchmark = 0.165,
+            target_range = se_prop(.165, 1015),
+            title = paste("Plot ", i, ": Prevalence, Infected", sep = ""))
 
-sim_targets %>%
-  mutate(total.incid = incid + exo.incid) %>%
-  ggplot(aes(x = time, y = total.incid, color = sim)) +
-  geom_line(alpha = .4) +
-  geom_hline(aes(yintercept = 5.08, color = "red")) +
-  theme_minimal() +
-  ggtitle("Plot 5: Weekly Incidence (Combined)")
+i <- i+1
+target_plot(data = sim_targets,
+            var = "i.prev.B",
+            group = "sim",
+            benchmark = 0.32,
+            target_range = se_prop(.32, 244),
+            title = paste("Plot ", i, ": Prevalence, Infected (Black)", sep = ""))
 
+i <- i+1
+target_plot(data = sim_targets,
+            var = "i.prev.H",
+            group = "sim",
+            benchmark = 0.125,
+            target_range = se_prop(.125, 304),
+            title = paste("Plot ", i, ": Prevalence, Infected (Hispanic)", sep = ""))
 
-# Percentage of infections that are exogenous
-data_5 <- data_5 %>%
-  mutate(prop.exo.incid.B = exo.incid.B/(incid.B + exo.incid.B),
-         prop.exo.incid.H = exo.incid.H/(incid.H + exo.incid.H),
-         prop.exo.incid.O = exo.incid.O/(incid.O + exo.incid.O),
-         prop.exo.incid.W = exo.incid.W/(incid.W + exo.incid.W))
+i <- i+1
+target_plot(data = sim_targets,
+            var = "i.prev.O",
+            group = "sim",
+            benchmark = 0.122,
+            target_range = se_prop(.122, 115),
+            title = paste("Plot ", i, ": Prevalence, Infected (Other)", sep = ""))
 
-mean(data_5$prop.exo.incid.B, na.rm = T)
-mean(data_5$prop.exo.incid.H, na.rm = T)
-mean(data_5$prop.exo.incid.O, na.rm = T)
-mean(data_5$prop.exo.incid.W, na.rm = T)
-
-
-data.frame(race = netstats$attr$race,
-           hiv.status = netstats$attr$diag.status) %>%
-  dplyr::group_by(race) %>%
-  dplyr::summarize(prev = mean(hiv.status)) %>%
-  dplyr::ungroup()
-
-
-
-
-
-# 1. Linked to care
-
-
-
-
-
-
-
-
+i <- i+1
+target_plot(data = sim_targets,
+            var = "i.prev.W",
+            group = "sim",
+            benchmark = .02,
+            target_range = se_prop(.02, 252),
+            title = paste("Plot ", i, ": Prevalence, Infected (White)", sep = ""))
 

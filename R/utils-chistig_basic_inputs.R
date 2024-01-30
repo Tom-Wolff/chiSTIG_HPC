@@ -20,8 +20,8 @@ param <- EpiModel::param.net(
   data.frame.params   = read.csv("./data/input/params_chistig_nov30.csv"),
   netstats            = netstats,
   epistats            = epistats,
-  prep.start          = prep_start,
-  riskh.start         = prep_start - 53
+  prep.start          = Inf,
+  riskh.start         = Inf
 )
 
 # Initial conditions (default prevalence initialized in epistats)
