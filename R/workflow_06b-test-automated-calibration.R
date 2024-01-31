@@ -175,7 +175,7 @@ calib_object <- list(
           tx.halt.full.or_3 = sample(seq(1, 2, length.out = n_sims)),
           tx.halt.full.or_4 = sample(seq(1, 2, length.out = n_sims))
         ),
-        make_next_proposals = make_ind_shrink_proposer(n_sims),
+        make_next_proposals = swfcalib::make_shrink_proposer(n_sims, shrink = 2),
         get_result = determ_ind_poly_end(0.10, poly_n = 3)
       )
     )
