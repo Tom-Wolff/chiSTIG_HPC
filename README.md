@@ -54,7 +54,7 @@ If this folder already exists in your local project repository, you’ll want to
 
 ## 6. From the command line, copy the newly-created subdirectory of `workflows` created by this script to its corresponding place on the HPC directory
 
-`$ scp -r ./workflows/model_calibration quest.northwestern.edu:projects/p32153/workflows/`
+`$ scp -r ./workflows/model_calibration quest.northwestern.edu:/projects/p32153/workflows/`
 
 Note: You'll be asked for your password once more
 
