@@ -195,7 +195,7 @@ calib_object <- list(
 source("./R/utils-hpc_configs.R") # creates `hpc_configs`
 
 wf <- create_workflow(
-  wf_name = "Vignette_auto_calib",
+  wf_name = "auto_calib",
   default_sbatch_opts = hpc_configs$default_sbatch_opts
 )
 
