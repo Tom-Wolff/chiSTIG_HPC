@@ -144,7 +144,7 @@ calib_object <- list(
         targets_val = 0.5614905982,
         params = c("hiv.test.rate_4"), # target: 0.0069
         initial_proposals = dplyr::tibble(
-          hiv.test.rate_3 = seq(0.002, 0.006, length.out = n_sims),
+          hiv.test.rate_4 = seq(0.002, 0.006, length.out = n_sims),
         ),
         make_next_proposals = swfcalib::make_shrink_proposer(n_sims, shrink = 2), # IT WILL GUESS THE BEST VALUE FROM `poly_n` AND MAKE A NEW RANGE THAT'S TWICE AS SMALL
         get_result = swfcalib::determ_poly_end(0.10, poly_n = 5) # ASK HOW WIDE A THRESHOLD WE'RE INTERESTED IN (0.001 current setting)

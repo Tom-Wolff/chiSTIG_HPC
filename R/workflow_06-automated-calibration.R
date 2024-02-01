@@ -108,20 +108,20 @@ calib_object <- list(
   ),
   waves = list(
 # Wave 1 (Population Size)
+    # wave1 = list(
+    #   job1 = list(
+    #   targets = "num",
+    #   targets_val = 11612,
+    #   params = c("a.rate"),
+    #   initial_proposals = dplyr::tibble(
+    #     a.rate = seq(0.001, 0.002, length.out = n_sims),
+    #   ),
+    #   make_next_proposals = swfcalib::make_shrink_proposer(n_sims, shrink = 2),
+    #   get_result = swfcalib::determ_poly_end(0.001, poly_n = 5)
+    #   )
+    # ),
+# Wave 1 (Diagnosis Rates and Linked To Care)
     wave1 = list(
-      job1 = list(
-      targets = "num",
-      targets_val = 11612,
-      params = c("a.rate"),
-      initial_proposals = dplyr::tibble(
-        a.rate = seq(0.001, 0.002, length.out = n_sims),
-      ),
-      make_next_proposals = swfcalib::make_shrink_proposer(n_sims, shrink = 2),
-      get_result = swfcalib::determ_poly_end(0.001, poly_n = 5)
-      )
-    ),
-# Wave 2 (Diagnosis Rates and Linked To Care)
-    wave2 = list(
       job1 = list(
         targets = "cc.dx.B",
         targets_val = 0.5465356428,
@@ -157,7 +157,7 @@ calib_object <- list(
         targets_val = 0.5614905982,
         params = c("hiv.test.rate_4"), # target: 0.0069
         initial_proposals = dplyr::tibble(
-          hiv.test.rate_3 = seq(0.002, 0.006, length.out = n_sims),
+          hiv.test.rate_4 = seq(0.002, 0.006, length.out = n_sims),
         ),
         make_next_proposals = swfcalib::make_shrink_proposer(n_sims, shrink = 2), # IT WILL GUESS THE BEST VALUE FROM `poly_n` AND MAKE A NEW RANGE THAT'S TWICE AS SMALL
         get_result = swfcalib::determ_poly_end(0.001, poly_n = 5) # ASK HOW WIDE A THRESHOLD WE'RE INTERESTED IN (0.001 current setting)
