@@ -24,18 +24,18 @@ model <- function(proposal) {
   library(EpiModelHIV)
   library(dplyr)
 
-
-  epistats <- readRDS("data/intermediate/estimates/epistats-local.rds") # THESE ARE STORED IN INPUT WHERE THEY USUALLY AREN'T IN THE OTHER WORKFLOWS
-  netstats <- readRDS("data/intermediate/estimates/netstats-local.rds")
-  est      <- readRDS("data/intermediate/estimates/basic_netest-local.rds")
-
-  param <- param.net(
-    data.frame.params = read.csv("data/input/params_chistig_jan29.csv"),
-    netstats          = netstats,
-    epistats          = epistats
-  )
-
-  init <- init_msm()
+  source("./R/utils-chistig_basic_inputs.R") # make `path_to_est`, `param` and `init`
+  # epistats <- readRDS("data/intermediate/estimates/epistats-local.rds") # THESE ARE STORED IN INPUT WHERE THEY USUALLY AREN'T IN THE OTHER WORKFLOWS
+  # netstats <- readRDS("data/intermediate/estimates/netstats-local.rds")
+  # est      <- readRDS("data/intermediate/estimates/basic_netest-local.rds")
+  #
+  # param <- param.net(
+  #   data.frame.params = read.csv("data/input/params_chistig_jan29.csv"),
+  #   netstats          = netstats,
+  #   epistats          = epistats
+  # )
+  #
+  # init <- init_msm()
 
   control <- control_msm(
     nsteps = 52 * 60,

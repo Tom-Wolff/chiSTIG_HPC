@@ -434,8 +434,8 @@
       "RemoteRepo": "chiSTIGmodules",
       "RemoteUsername": "Tom-Wolff",
       "RemoteRef": "main",
-      "RemoteSha": "9430f82a43446ac40fae5bd5009f9495361aa128",
-      "Hash": "2d47b087633c072d3ed9a26cb38ec5d5"
+      "RemoteSha": "36e14d78fad693361c8a412de31cecc025bb38d3",
+      "Hash": "608f8358b418fef046c24ec33549f452"
     },
     "cli": {
       "Package": "cli",
