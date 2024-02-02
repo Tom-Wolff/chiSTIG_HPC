@@ -30,6 +30,7 @@ model <- function(proposal) {
   library(EpiModelHIV)
   library(dplyr)
 
+  context <- "hpc"
   source("./R/utils-chistig_basic_inputs.R") # make `path_to_est`, `param` and `init`
   # epistats <- readRDS("data/intermediate/estimates/epistats-local.rds") # THESE ARE STORED IN INPUT WHERE THEY USUALLY AREN'T IN THE OTHER WORKFLOWS
   # netstats <- readRDS("data/intermediate/estimates/netstats-local.rds")
