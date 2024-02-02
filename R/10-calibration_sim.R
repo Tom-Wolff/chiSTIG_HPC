@@ -129,7 +129,7 @@ control <- EpiModelHIV::control_msm(
 
 # Receptive(102-186)/10000
 # Insertive (1-19)/10000
-n_scenarios <- 2
+n_scenarios <- 5
 scenarios_df <- tibble(
   # mandatory columns
   .scenario.id = as.character(seq_len(n_scenarios)),
@@ -155,10 +155,10 @@ scenarios_df <- tibble(
   exo.trans.prob.W = seq(0.0900, 0.0900, length.out = n_scenarios),
  #
   # HIV Testing Rate
-   hiv.test.rate_1 = seq(0.0038, 0.0038, length.out = n_scenarios),
+   hiv.test.rate_1 = seq(0.0041, 0.0041, length.out = n_scenarios),
    hiv.test.rate_2 = seq(0.004192807, 0.004192807, length.out = n_scenarios),
-   hiv.test.rate_3 = seq(.0054, 0.0055, length.out = n_scenarios),
-   hiv.test.rate_4 = seq(0.0046625, 0.0046625, length.out = n_scenarios),
+   hiv.test.rate_3 = seq(.0042, 0.0048, length.out = n_scenarios),
+   hiv.test.rate_4 = seq(0.0055, 0.0055, length.out = n_scenarios),
  #
  #  # Probability that an HIV+ node will initiate ART treatment
  #  tx.init.rate_1 = seq(0.3622703, 0.3622703, length.out = n_scenarios),

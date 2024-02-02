@@ -99,6 +99,8 @@ model <- function(proposal) {
   sim <- netsim(est, param_sc, init, control)
 
   # Process the results  -------------------------------------------------------
+  source("./R/utils-targets.R")
+
   results <- as_tibble(sim) |>
     mutate_calibration_targets() |>
     filter(time >= max(time) - 52) |>

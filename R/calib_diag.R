@@ -54,7 +54,7 @@ load_diag <- function(this_dir, nsim = 1) {
   return(sim_targets)
 }
 
-sim_targets <- load_diag(this_dir = getwd(), nsim = 3)
+sim_targets <- load_diag(this_dir = getwd(), nsim = 5)
 
 # Custom function for generating summary plots ---------------------------------
 target_plot <- function(data, group, var, benchmark = NULL, title = NULL,
@@ -218,7 +218,7 @@ i <- i+1
 target_plot(data = sim_targets,
             group = "sim",
             var = "cc.dx.B",
-            benchmark = 0.5465356428,
+            benchmark = 0.546535643,
             title = paste("Plot ", i, ": Proportion of HIV+ that are Diagnosed (Black)", sep = ""))
 
 
@@ -235,7 +235,7 @@ i <- i+1
 target_plot(data = sim_targets,
             group = "sim",
             var = "cc.dx.O",
-            benchmark = 0.5988779867,
+            benchmark = 0.5601310,
             title = paste("Plot ", i, ": Proportion of HIV+ that are Diagnosed (Other)", sep = ""))
 
 i <- i+1
@@ -243,7 +243,7 @@ i <- i+1
 target_plot(data = sim_targets,
             group = "sim",
             var = "cc.dx.W",
-            benchmark = 0.5614905982,
+            benchmark = 0.5988779867,
             title = paste("Plot ", i, ": Proportion of HIV+ that are Diagnosed (White)", sep = ""))
 
 

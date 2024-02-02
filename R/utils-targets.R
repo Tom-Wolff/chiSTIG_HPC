@@ -2,21 +2,22 @@ library("dplyr")
 library("EpiModel")
 
 targets <- c(
+  num = 11612,
   # 1st calibration set (all independant)
-  cc.dx.B                                 = 0.847,
-  cc.dx.H                                 = 0.818,
-    cc.dx.O                               = 0.873,
-  cc.dx.W                                 = 0.873,
-  cc.linked1m.B                           = 0.829,
-  cc.linked1m.H                           = 0.898,
-    cc.linked1m.O                         = 0.890,
-  cc.linked1m.W                           = 0.890,
+  cc.dx.B                                 = 0.546535643,
+  cc.dx.H                                 = 0.5431367893,
+    cc.dx.O                               = 0.5601310,
+  cc.dx.W                                 = 0.5988779867,
+  cc.linked1m.B                           = 0.828,
+  cc.linked1m.H                           = 0.867,
+    cc.linked1m.O                         = 0.875,
+  cc.linked1m.W                           = 0.936,
   # CombPrev appendix 8.2.2
   # 2nd calibration set (all independant)
-  cc.vsupp.B                              = 0.602,
-  cc.vsupp.H                              = 0.620,
-    cc.vsupp.O                              = 0.710,
-  cc.vsupp.W                              = 0.710,
+  cc.vsupp.B                              = 0.571,
+  cc.vsupp.H                              = 0.675,
+    cc.vsupp.O                              = 0.586,
+  cc.vsupp.W                              = 0.617,
   # STIs
   ir100.gc                                = 12.81,
   ir100.ct                                = 14.59,
@@ -38,7 +39,26 @@ targets <- c(
   cc.prep                                 = 0.203,
   prep_prop_ret1y                         = 0.56, # DOI: 10.1002/jia2.25252 and 10.1093/cid/ciaa037 (54%)
   prep_prop_ret2y                         = 0.41,
-  disease.mr100                           = 0.273
+  disease.mr100                           = 0.273,
+  # Incidence Rates for chiSTIG
+  ### Exogenous incidence rate
+  exo.ir100.B = 1.618,
+  exo.ir100.H = 0.7345,
+  exo.ir100.O = 0.5695,
+  exo.ir100.W = 0.2891,
+  log.exo.ir100.B = log(1.618),
+  log.exo.ir100.H = log(0.7345),
+  log.exo.ir100.O = log(0.5695),
+  log.exo.ir100.W = log(0.2891),
+  ### Endogenous incidence rate
+  ir100.B = 6.42,
+  ir100.H = 2.04,
+  ir100.O = 1.71,
+  ir100.W = 0.73,
+  log.ir100.B = log(6.42),
+  log.ir100.H = log(2.04),
+  log.ir100.O = log(1.71),
+  log.ir100.W = log(0.73)
 )
 
 # chiSTIG specific
