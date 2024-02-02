@@ -30,7 +30,9 @@ model <- function(proposal) {
   library(EpiModelHIV)
   library(dplyr)
 
+  source("./R/utils-0_project_settings.R")
   context <- "hpc"
+  max_cores <- 1
   source("./R/utils-chistig_basic_inputs.R") # make `path_to_est`, `param` and `init`
   # epistats <- readRDS("data/intermediate/estimates/epistats-local.rds") # THESE ARE STORED IN INPUT WHERE THEY USUALLY AREN'T IN THE OTHER WORKFLOWS
   # netstats <- readRDS("data/intermediate/estimates/netstats-local.rds")
@@ -69,7 +71,7 @@ model <- function(proposal) {
       ir100.B, ir100.H, ir100.O, ir100.W
       # i.prev.dx.B, i.prev.dx.H, i.prev.dx.O, i.prev.dx.W,
     ) |>
-    summarise(across( everything(), ~ mean(.x, na.rm = TRUE)))
+    summarise(across(everything(), ~ mean(.x, na.rm = TRUE)))
 
   # Return the one row `tibble`
   return(results)
