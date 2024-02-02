@@ -18,6 +18,12 @@
 
 library("slurmworkflow")
 
+#### SEEMS LIKE THESE ARE NEEDED, BUT NOT SURE WHERE THEY'RE SPECIFIED
+# Settings ---------------------------------------------------------------------
+source("./R/utils-0_project_settings.R")
+context <- "hpc"
+max_cores <- 1
+
 # Define the `model` function
 model <- function(proposal) {
   # Load all required elements
