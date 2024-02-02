@@ -1,3 +1,5 @@
+print(context)
+
 if (!context %in% c("local", "hpc")) {
   stop("The `context` variable must be set to either 'local' or 'hpc'")
 }
@@ -17,7 +19,7 @@ path_to_restart <- paste0(est_dir, "restart-", context, ".rds")
 # `netsim` Parameters
 prep_start <- 52 * 2
 param <- EpiModel::param.net(
-  data.frame.params   = read.csv("./data/input/params_chistig_nov30.csv"),
+  data.frame.params   = read.csv("./data/input/params_chistig_jan29.csv"),
   netstats            = netstats,
   epistats            = epistats,
   prep.start          = Inf,
