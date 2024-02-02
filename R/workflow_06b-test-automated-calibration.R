@@ -34,7 +34,7 @@ model <- function(proposal) {
   warning("Loaded project settings")
   source("./R/utils-0_project_settings.R")
   context <- "hpc"
-  warning("Context just stored")
+  warning(paste("Context just stored as '", context, "'", sep = ""))
   max_cores <- 1
   source("./R/utils-chistig_basic_inputs.R") # make `path_to_est`, `param` and `init`
   # epistats <- readRDS("data/intermediate/estimates/epistats-local.rds") # THESE ARE STORED IN INPUT WHERE THEY USUALLY AREN'T IN THE OTHER WORKFLOWS
@@ -48,6 +48,7 @@ model <- function(proposal) {
   # )
   #
   # init <- init_msm()
+  warning("Finished basic inputs")
 
   control <- control_msm(
     nsteps = 52 * 60,
@@ -55,9 +56,12 @@ model <- function(proposal) {
     ncores = 1
   )
 
+  warning("Finished control")
   # Proposal to scenario -------------------------------------------------------
   scenario <- EpiModelHPC::swfcalib_proposal_to_scenario(proposal)
+  warning("Finished scenario")
   param_sc <- EpiModel::use_scenario(param, scenario)
+  warning("Finished param_sc")
 
   # Run the simulation ---------------------------------------------------------
   sim <- netsim(est, param_sc, init, control)
