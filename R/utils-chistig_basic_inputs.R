@@ -1,8 +1,9 @@
-print(context)
 
-if (!context %in% c("local", "hpc")) {
-  stop("The `context` variable must be set to either 'local' or 'hpc'")
-}
+# if (!context %in% c("local", "hpc")) {
+#   stop("The `context` variable must be set to either 'local' or 'hpc'")
+# }
+
+context <- "hpc"
 
 epistats <- readRDS("./data/intermediate/estimates/epistats-local.rds")
 netstats <- readRDS("./data/intermediate/estimates/netstats-novenues-local.rds")
