@@ -26,10 +26,12 @@ max_cores <- 1
 
 # Define the `model` function
 model <- function(proposal) {
+  print("Start model")
   # Load all required elements
   library(EpiModelHIV)
   library(dplyr)
 
+  Print("Load project settings")
   source("./R/utils-0_project_settings.R")
   context <- "hpc"
   print("Context just stored")
