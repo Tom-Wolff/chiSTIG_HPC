@@ -26,15 +26,15 @@ max_cores <- 1
 
 # Define the `model` function
 model <- function(proposal) {
-  print("Start model")
+  warning("Started model")
   # Load all required elements
   library(EpiModelHIV)
   library(dplyr)
 
-  print("Load project settings")
+  warning("Loaded project settings")
   source("./R/utils-0_project_settings.R")
   context <- "hpc"
-  print("Context just stored")
+  warning("Context just stored")
   max_cores <- 1
   source("./R/utils-chistig_basic_inputs.R") # make `path_to_est`, `param` and `init`
   # epistats <- readRDS("data/intermediate/estimates/epistats-local.rds") # THESE ARE STORED IN INPUT WHERE THEY USUALLY AREN'T IN THE OTHER WORKFLOWS
