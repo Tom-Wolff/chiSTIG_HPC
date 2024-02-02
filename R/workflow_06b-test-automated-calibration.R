@@ -50,6 +50,9 @@ model <- function(proposal) {
   # init <- init_msm()
   warning("Finished basic inputs")
 
+  est <- readRDS(path_to_est)
+  warning("Finished reading in `est`")
+
   control <- control_msm(
     nsteps = 52 * 60,
     nsims  = 1,
