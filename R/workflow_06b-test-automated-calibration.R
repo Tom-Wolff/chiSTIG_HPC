@@ -31,7 +31,7 @@ model <- function(proposal) {
   library(EpiModelHIV)
   library(dplyr)
 
-  Print("Load project settings")
+  print("Load project settings")
   source("./R/utils-0_project_settings.R")
   context <- "hpc"
   print("Context just stored")
