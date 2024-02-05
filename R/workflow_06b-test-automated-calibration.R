@@ -57,7 +57,8 @@ model <- function(proposal) {
   source("./R/utils-targets.R")
 
   control <- control_msm(
-    nsteps = 52 * 60,
+    # nsteps = 52 * 11,
+    nsteps = 100,
     nsims  = 1,
     ncores = 1,
     .tracker.list       = calibration_trackers,
@@ -111,6 +112,7 @@ model <- function(proposal) {
     select(
       cc.dx.B, cc.dx.H, cc.dx.O, cc.dx.W,
       cc.linked1m.B, cc.linked1m.H, cc.linked1m.O, cc.linked1m.W,
+      cc.vsupp.B, cc.vsupp.H, cc.vsupp.O, cc.vsupp.W,
       exo.ir100.B, exo.ir100.H, exo.ir100.O, exo.ir100.W,
       # endo.ir100.B, endo.ir100.H, endo.ir100.O, endo.ir100.W,
       ir100.B, ir100.H, ir100.O, ir100.W
@@ -123,7 +125,7 @@ model <- function(proposal) {
 }
 
 # Create the `calib_object`
-n_sims  <- 400
+n_sims  <- 10
 calib_object <- list(
   config = list(
     simulator = model,
