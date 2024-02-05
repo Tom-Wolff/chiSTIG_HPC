@@ -61,50 +61,6 @@ targets <- c(
   log.ir100.W = log(0.73)
 )
 
-# chiSTIG specific
-targets2 <- c(
-  # 1st calibration set (all independent)
-  ### Proportion HIV+ that are diagnosed
-  cc.dx = .814,
-  cc.dx.B = .804,
-  cc.dx.H = .799,
-  cc.dx.O = .826,
-  cc.dx.W = .881,
-  ### Proportion linked to care in 1st month of diagnosis
-  cc.linked1m.B = .828,
-  cc.linked1m.H = .867,
-  cc.linked1m.O = .875,
-  cc.linked1m.W = .936,
-  ### Weekly Exogenous tranmissions
-  exo.incid.B = (.28*116.3436)/52,
-  exo.incid.H = (.40*64.27536)/52,
-  exo.incid.O = (.37*19.59955)/52,
-  exo.incid.W = (.44*24.91874)/52,
-  ### Annual Exogenous tranmissions
-  exo.incid.B = .28*116.3436,
-  exo.incid.H = .40*64.27536,
-  exo.incid.O = .37*19.59955,
-  exo.incid.W = .44*24.91874,
-  # CombPrev appendix 8.2.2
-  # 2nd calibration set (all independent)
-  cc.vsupp.B = 0.571,
-  cc.vsupp.H = 0.675,
-  cc.vsupp.O = 0.586,
-  cc.vsupp.W = 0.617,
-  # STIs
-  ir100.gc = 0,
-  ir100.ct = 0,
-  # 3rd calibration set
-  ### Annual Incidence by Race (source RADAR)
-  annual.incid.B = 116.3436,
-  annual.incid.H = 64.27536,
-  annual.incid.O = 19.59955,
-  annual.incid.W = 24.91874,
-  i.prev.dx.B = NA,
-  i.prev.dx.H = NA,
-  i.prev.dx.O = NA,
-  i.prev.dx.W = NA
-)
 
 targets_plot_infos <- list(
   cc.dx = list(

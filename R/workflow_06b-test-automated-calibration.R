@@ -53,10 +53,14 @@ model <- function(proposal) {
   est <- readRDS(path_to_est)
   warning("Finished reading in `est`")
 
+  # I think this needs to be loaded here to get `calibration_trackers` to work
+  source("./R/utils-targets.R")
+
   control <- control_msm(
     nsteps = 52 * 60,
     nsims  = 1,
     ncores = 1,
+    .tracker.list       = calibration_trackers,
 
     initialize.FUN =              chiSTIGmodules::initialize_msm_chi,
     aging.FUN =                   chiSTIGmodules::aging_msm_chi,
@@ -99,7 +103,7 @@ model <- function(proposal) {
   sim <- netsim(est, param_sc, init, control)
 
   # Process the results  -------------------------------------------------------
-  source("./R/utils-targets.R")
+
 
   results <- as_tibble(sim) |>
     mutate_calibration_targets() |>
