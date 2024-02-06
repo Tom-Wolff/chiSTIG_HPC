@@ -18,30 +18,78 @@
 
 library("slurmworkflow")
 
+#### SEEMS LIKE THESE ARE NEEDED, BUT NOT SURE WHERE THEY'RE SPECIFIED
+# Settings ---------------------------------------------------------------------
+source("./R/utils-0_project_settings.R")
+context <- "hpc"
+max_cores <- 1
+
 # Define the `model` function
 model <- function(proposal) {
   # Load all required elements
   library(EpiModelHIV)
   library(dplyr)
 
+  warning("Loaded project settings")
+  source("./R/utils-0_project_settings.R")
+  context <- "hpc"
+  warning(paste("Context just stored as '", context, "'", sep = ""))
+  max_cores <- 1
+  source("./R/utils-chistig_basic_inputs.R")
 
-  epistats <- readRDS("data/intermediate/estimates/epistats-local.rds") # THESE ARE STORED IN INPUT WHERE THEY USUALLY AREN'T IN THE OTHER WORKFLOWS
-  netstats <- readRDS("data/intermediate/estimates/netstats-local.rds")
-  est      <- readRDS("data/intermediate/estimates/basic_netest-local.rds")
 
-  param <- param.net(
-    data.frame.params = read.csv("data/input/params_chistig_jan29.csv"),
-    netstats          = netstats,
-    epistats          = epistats
-  )
+  # epistats <- readRDS("data/intermediate/estimates/epistats-local.rds") # THESE ARE STORED IN INPUT WHERE THEY USUALLY AREN'T IN THE OTHER WORKFLOWS
+  # netstats <- readRDS("data/intermediate/estimates/netstats-local.rds")
+  # est      <- readRDS("data/intermediate/estimates/basic_netest-local.rds")
+  #
+  # param <- param.net(
+  #   data.frame.params = read.csv("data/input/params_chistig_jan29.csv"),
+  #   netstats          = netstats,
+  #   epistats          = epistats
+  # )
 
-  init <- init_msm()
+  # init <- init_msm()
+
+  # I think this needs to be loaded here to get `calibration_trackers` to work
+  source("./R/utils-targets.R")
 
   control <- control_msm(
-    nsteps = 52 * 60,
+    # nsteps = 52 * 11,
+    nsteps = 100,
     nsims  = 1,
-    ncores = 1
+    ncores = 1,
+    .tracker.list       = calibration_trackers,
+
+    initialize.FUN =              chiSTIGmodules::initialize_msm_chi,
+    aging.FUN =                   chiSTIGmodules::aging_msm_chi,
+    departure.FUN =               chiSTIGmodules::departure_msm_chi,
+    arrival.FUN =                 chiSTIGmodules::arrival_msm_chi,
+    # venues.FUN =                  chiSTIGmodules:::venues_msm_chi,
+    partident.FUN =               chiSTIGmodules::partident_msm_chi,
+    hivtest.FUN =                 chiSTIGmodules::hivtest_msm_chi,
+    hivtx.FUN =                   chiSTIGmodules::hivtx_msm_chi,
+    hivprogress.FUN =             chiSTIGmodules::hivprogress_msm_chi,
+    hivvl.FUN =                   chiSTIGmodules::hivvl_msm_chi,
+    resim_nets.FUN =              chiSTIGmodules::simnet_msm_chi,
+    acts.FUN =                    chiSTIGmodules::acts_msm_chi,
+    condoms.FUN =                 chiSTIGmodules::condoms_msm_chi,
+    position.FUN =                chiSTIGmodules::position_msm_chi,
+    prep.FUN =                    chiSTIGmodules::prep_msm_chi,
+    hivtrans.FUN =                chiSTIGmodules::hivtrans_msm_chi,
+    exotrans.FUN =                chiSTIGmodules:::exotrans_msm_chi,
+    stitrans.FUN =                chiSTIGmodules::stitrans_msm_chi,
+    stirecov.FUN =                chiSTIGmodules::stirecov_msm_chi,
+    stitx.FUN =                   chiSTIGmodules::stitx_msm_chi,
+    prev.FUN =                    chiSTIGmodules::prevalence_msm_chi,
+    cleanup.FUN =                 chiSTIGmodules::cleanup_msm_chi,
+
+    module.order = c("aging.FUN", "departure.FUN", "arrival.FUN", # "venues.FUN",
+                     "partident.FUN", "hivtest.FUN", "hivtx.FUN", "hivprogress.FUN",
+                     "hivvl.FUN", "resim_nets.FUN", "acts.FUN", "condoms.FUN",
+                     "position.FUN", "prep.FUN", "hivtrans.FUN", "exotrans.FUN",
+                     "stitrans.FUN", "stirecov.FUN", "stitx.FUN", "prev.FUN", "cleanup.FUN")
   )
+
 
   # Proposal to scenario -------------------------------------------------------
   scenario <- EpiModelHPC::swfcalib_proposal_to_scenario(proposal)
@@ -57,12 +105,13 @@ model <- function(proposal) {
     select(
       cc.dx.B, cc.dx.H, cc.dx.O, cc.dx.W,
       cc.linked1m.B, cc.linked1m.H, cc.linked1m.O, cc.linked1m.W,
+      cc.vsupp.B, cc.vsupp.H, cc.vsupp.O, cc.vsupp.W,
       exo.ir100.B, exo.ir100.H, exo.ir100.O, exo.ir100.W,
       # endo.ir100.B, endo.ir100.H, endo.ir100.O, endo.ir100.W,
       ir100.B, ir100.H, ir100.O, ir100.W
       # i.prev.dx.B, i.prev.dx.H, i.prev.dx.O, i.prev.dx.W,
     ) |>
-    summarise(across( everything(), ~ mean(.x, na.rm = TRUE)))
+    summarise(across(everything(), ~ mean(.x, na.rm = TRUE)))
 
   # Return the one row `tibble`
   return(results)
@@ -144,7 +193,7 @@ calib_object <- list(
       ),
       job3 = list(
         targets = "cc.dx.O",
-        targets_val = 0.5988779867,
+        targets_val = 0.5614905982,
         params = c("hiv.test.rate_3"), # target: 0.0069
         initial_proposals = dplyr::tibble(
           hiv.test.rate_3 = seq(0.002, 0.006, length.out = n_sims),
@@ -154,7 +203,7 @@ calib_object <- list(
       ),
       job4 = list(
         targets = "cc.dx.W",
-        targets_val = 0.5614905982,
+        targets_val = 0.5988779867,
         params = c("hiv.test.rate_4"), # target: 0.0069
         initial_proposals = dplyr::tibble(
           hiv.test.rate_4 = seq(0.002, 0.006, length.out = n_sims),
@@ -188,8 +237,8 @@ calib_object <- list(
             tx.halt.full.or_3 = sample(seq(1, 2, length.out = n_sims)),
             tx.halt.full.or_4 = sample(seq(1, 2, length.out = n_sims))
           ),
-          make_next_proposals = make_ind_shrink_proposer(n_sims),
-          get_result = determ_ind_poly_end(0.001, poly_n = 3)
+          make_next_proposals = swfcalib::make_shrink_proposer(n_sims, shrink = 2),
+          get_result = swfcalib::determ_poly_end(0.001, poly_n = 3)
         )
       ),
 # Wave 4 (Exogenous Incidence Rate)
@@ -207,7 +256,7 @@ calib_object <- list(
         make_next_proposals =
           swfcalib::make_proposer_se_range(n_sims, retain_prop = 0.3),
         get_result = swfcalib::determ_end_thresh(
-          thresholds = rep(0.02, 4),
+          thresholds = rep(0.05, 4),
           n_enough = 100
         )
       )
@@ -227,7 +276,7 @@ calib_object <- list(
         make_next_proposals =
           swfcalib::make_proposer_se_range(n_sims, retain_prop = 0.3),
         get_result = swfcalib::determ_end_thresh(
-          thresholds = rep(0.02, 4),
+          thresholds = rep(0.05, 4),
           n_enough = 100
         )
       )
@@ -248,7 +297,7 @@ calib_object <- list(
 source("./R/utils-hpc_configs.R") # creates `hpc_configs`
 
 wf <- create_workflow(
-  wf_name = "Vignette_auto_calib",
+  wf_name = "auto_calib",
   default_sbatch_opts = hpc_configs$default_sbatch_opts
 )
 
@@ -265,7 +314,7 @@ wf <- add_workflow_step(
   ),
   sbatch_opts = list(
     "cpus-per-task" = 8,
-    "time" = "00:20:00",
+    "time" = "01:00:00",
     "mem-per-cpu" = "4G",
     "mail-type" = "FAIL"
   )
@@ -289,7 +338,7 @@ wf <- add_workflow_step(
   ),
   sbatch_opts = list(
     "cpus-per-task" = batch_size,
-    "time" = "05:00:00",
+    "time" = "01:00:00",
     "mem-per-cpu" = "5G",
     "mail-type" = "FAIL"
   )
@@ -307,7 +356,7 @@ wf <- add_workflow_step(
   ),
   sbatch_opts = list(
     "cpus-per-task" = 1,
-    "time" = "00:20:00",
+    "time" = "01:00:00",
     "mem-per-cpu" = "8G",
     "mail-type" = "END"
   )
