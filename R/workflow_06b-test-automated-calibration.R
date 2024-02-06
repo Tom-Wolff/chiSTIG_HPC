@@ -159,7 +159,7 @@ calib_object <- list(
       hiv.trans.scale_4 = 1
     ),
     root_directory = "data/calib",
-    max_iteration = 100,
+    max_iteration = 3,
     n_sims = n_sims
   ),
   waves = list(
@@ -217,11 +217,8 @@ calib_object <- list(
         ),
         make_next_proposals = swfcalib::make_shrink_proposer(n_sims, shrink = 2),
         get_result = swfcalib::determ_poly_end(0.10, poly_n = 3)
-      )
-    ),
-    # Wave 3 (ART Cessation and Viral Suppression)
-    wave2 = list(
-      job1 = list(
+      ),
+      job6 = list(
         targets = paste0("cc.vsupp.", c("B", "H", "O", "W")),
         targets_val = c(0.571, 0.675, 0.586, 0.617),
         params = paste0("tx.halt.full.or_", 1:4),
@@ -233,8 +230,59 @@ calib_object <- list(
         ),
         make_next_proposals = swfcalib::make_shrink_proposer(n_sims, shrink = 2),
         get_result = swfcalib::determ_poly_end(0.10, poly_n = 3)
+      ),
+      job7 = list(
+        targets = paste0("exo.ir100.", c("B", "H", "O", "W")),
+        targets_val = c(1.618, 0.7345, 0.5695, 0.2891),
+        params = paste0("exo.trans.prob.", c("B", "H", "O", "W")),
+        initial_proposals = dplyr::tibble(
+          exo.trans.prob.B = sample(seq(0.1, 0.6, length.out = n_sims)), # Need to update for parameters
+          exo.trans.prob.H = sample(seq(0.1, 0.6, length.out = n_sims)),
+          exo.trans.prob.O = sample(seq(0.1, 0.6, length.out = n_sims)),
+          exo.trans.prob.W = sample(seq(0.05, 0.30, length.out = n_sims))
+        ),
+        make_next_proposals =
+          swfcalib::make_proposer_se_range(n_sims, retain_prop = 0.3),
+        get_result = swfcalib::determ_end_thresh(
+          thresholds = rep(0.02, 4),
+          n_enough = 100
+        )
+      ),
+      job8 = list(
+        targets = paste0("ir100.", c("B", "H", "O", "W")),
+        targets_val = c(6.42, 2.04, 1.71, 0.73),
+        params = paste0("hiv.trans.scale_", 1:4),
+        initial_proposals = dplyr::tibble(
+          hiv.trans.scale_1 = sample(seq(8, 11, length.out = n_sims)), # Need to update for parameters
+          hiv.trans.scale_2 = sample(seq(4, 7, length.out = n_sims)),
+          hiv.trans.scale_3 = sample(seq(2, 5, length.out = n_sims)),
+          hiv.trans.scale_4 = sample(seq(0.5, 1.5, length.out = n_sims))
+        ),
+        make_next_proposals =
+          swfcalib::make_proposer_se_range(n_sims, retain_prop = 0.3),
+        get_result = swfcalib::determ_end_thresh(
+          thresholds = rep(0.02, 4),
+          n_enough = 100
+        )
       )
-    )
+
+    )#,
+    # # Wave 3 (ART Cessation and Viral Suppression)
+    # wave2 = list(
+    #   job1 = list(
+    #     targets = paste0("cc.vsupp.", c("B", "H", "O", "W")),
+    #     targets_val = c(0.571, 0.675, 0.586, 0.617),
+    #     params = paste0("tx.halt.full.or_", 1:4),
+    #     initial_proposals = dplyr::tibble(
+    #       tx.halt.full.or_1 = sample(seq(0.5, 1.5, length.out = n_sims)),
+    #       tx.halt.full.or_2 = sample(seq(0.4, 0.8, length.out = n_sims)),
+    #       tx.halt.full.or_3 = sample(seq(1, 2, length.out = n_sims)),
+    #       tx.halt.full.or_4 = sample(seq(1, 2, length.out = n_sims))
+    #     ),
+    #     make_next_proposals = swfcalib::make_shrink_proposer(n_sims, shrink = 2),
+    #     get_result = swfcalib::determ_poly_end(0.10, poly_n = 3)
+    #   )
+    # )
   )
 )
 
