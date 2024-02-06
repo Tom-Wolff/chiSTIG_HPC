@@ -50,6 +50,8 @@ model <- function(proposal) {
 
   # init <- init_msm()
 
+  est <- readRDS(path_to_est)
+
   # I think this needs to be loaded here to get `calibration_trackers` to work
   source("./R/utils-targets.R")
 
