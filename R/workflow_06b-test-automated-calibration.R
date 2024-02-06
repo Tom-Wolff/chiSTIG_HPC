@@ -244,7 +244,7 @@ calib_object <- list(
         make_next_proposals =
           swfcalib::make_proposer_se_range(n_sims, retain_prop = 0.3),
         get_result = swfcalib::determ_end_thresh(
-          thresholds = rep(0.02, 4),
+          thresholds = rep(0.10, 4),
           n_enough = 100
         )
       ),
@@ -261,7 +261,7 @@ calib_object <- list(
         make_next_proposals =
           swfcalib::make_proposer_se_range(n_sims, retain_prop = 0.3),
         get_result = swfcalib::determ_end_thresh(
-          thresholds = rep(0.02, 4),
+          thresholds = rep(0.10, 4),
           n_enough = 100
         )
       )
