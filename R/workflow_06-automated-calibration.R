@@ -56,8 +56,7 @@ model <- function(proposal) {
   source("./R/utils-targets.R")
 
   control <- control_msm(
-    # nsteps = 52 * 11,
-    nsteps = 100,
+    nsteps = 52 * 60,
     nsims  = 1,
     ncores = 1,
     .tracker.list       = calibration_trackers,
