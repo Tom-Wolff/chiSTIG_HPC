@@ -119,7 +119,7 @@ model <- function(proposal) {
 }
 
 # Create the `calib_object`
-n_sims  <- 400
+n_sims  <- 100
 calib_object <- list(
   config = list(
     simulator = model,
@@ -142,15 +142,15 @@ calib_object <- list(
       tx.halt.full.or_3 = 1.415046,
       tx.halt.full.or_4 = 1.237048,
       # Exogenous Transmission Parameter
-      exo.trans.prob.B = 0.49,
-      exo.trans.prob.H = 0.2,
-      exo.trans.prob.O = 0.1725,
-      exo.trans.prob.W = 0.09,
+      exo.trans.prob.B = 0.4642641,
+      exo.trans.prob.H = 0.2100492,
+      exo.trans.prob.O = 0.1640618,
+      exo.trans.prob.W = 0.08310792,
       # Trans Scale
-      hiv.trans.scale_1 = 9.5,
-      hiv.trans.scale_2 = 5.5,
-      hiv.trans.scale_3 = 3.1,
-      hiv.trans.scale_4 = 1
+      hiv.trans.scale_1 = 9.639344,
+      hiv.trans.scale_2 = 5.202113,
+      hiv.trans.scale_3 = 3.04742,
+      hiv.trans.scale_4 = 0.9872649
     ),
     root_directory = "data/calib",
     max_iteration = 100,
@@ -227,111 +227,93 @@ calib_object <- list(
     #   )
     # ),
 # Wave 2 (ART Cessation and Viral Suppression)
-      wave1 = list(
-        job1 = list(
-              targets = "cc.vsupp.B",
-              targets_val = 0.571,
-              params = c("tx.halt.full.or_1"),
-              initial_proposals = dplyr::tibble(
-                tx.halt.full.or_1 = sample(seq(0.5, 1.5, length.out = n_sims)),
-              ),
-              make_next_proposals = swfcalib::make_shrink_proposer(n_sims, shrink = 2),
-              get_result = swfcalib::determ_poly_end(0.001, poly_n = 5)
-            ),
-        job2 = list(
-              targets = "cc.vsupp.H",
-              targets_val = 0.675,
-              params = c("tx.halt.full.or_2"),
-              initial_proposals = dplyr::tibble(
-                tx.halt.full.or_2 = sample(seq(0.4, 0.8, length.out = n_sims)),
-              ),
-              make_next_proposals = swfcalib::make_shrink_proposer(n_sims, shrink = 2),
-              get_result = swfcalib::determ_poly_end(0.001, poly_n = 5)
-            ),
-        job3 = list(
-          targets = "cc.vsupp.O",
-          targets_val = 0.586,
-          params = c("tx.halt.full.or_3"),
-          initial_proposals = dplyr::tibble(
-            tx.halt.full.or_3 = sample(seq(1, 2, length.out = n_sims)),
-          ),
-          make_next_proposals = swfcalib::make_shrink_proposer(n_sims, shrink = 2),
-          get_result = swfcalib::determ_poly_end(0.001, poly_n = 5)
-        ),
-        job4 = list(
-          targets = "cc.vsupp.W",
-          targets_val = 0.617,
-          params = c("tx.halt.full.or_4"),
-          initial_proposals = dplyr::tibble(
-            tx.halt.full.or_4 = sample(seq(1, 2, length.out = n_sims)),
-          ),
-          make_next_proposals = swfcalib::make_shrink_proposer(n_sims, shrink = 2),
-          get_result = swfcalib::determ_poly_end(0.001, poly_n = 5)
-        )
-      ),
-# Wave 3 (Exogenous Incidence Rate)
-    wave2 = list(
-      job1 = list(
-        targets = "exo.ir100.B",
-        targets_val = 1.618,
-        params = c("exo.trans.prob.B"), # target: 0.00385
-        initial_proposals = dplyr::tibble(
-          exo.trans.prob.B = seq(0.1, 0.6, length.out = n_sims),
-        ),
-        make_next_proposals = swfcalib::make_shrink_proposer(n_sims, shrink = 2),
-        get_result = swfcalib::determ_poly_end(0.001, poly_n = 5)
-      ),
-      job2 = list(
-        targets = "exo.ir100.H",
-        targets_val = 0.7345,
-        params = c("exo.trans.prob.H"), # target: 0.00385
-        initial_proposals = dplyr::tibble(
-          exo.trans.prob.H = seq(0.1, 0.6, length.out = n_sims),
-        ),
-        make_next_proposals = swfcalib::make_shrink_proposer(n_sims, shrink = 2),
-        get_result = swfcalib::determ_poly_end(0.001, poly_n = 5)
-      ),
-      job3 = list(
-        targets = "exo.ir100.O",
-        targets_val = 0.5695,
-        params = c("exo.trans.prob.O"), # target: 0.00385
-        initial_proposals = dplyr::tibble(
-          exo.trans.prob.O = seq(0.1, 0.6, length.out = n_sims),
-        ),
-        make_next_proposals = swfcalib::make_shrink_proposer(n_sims, shrink = 2),
-        get_result = swfcalib::determ_poly_end(0.001, poly_n = 5)
-      ),
-      job4 = list(
-        targets = "exo.ir100.W",
-        targets_val = 0.2891,
-        params = c("exo.trans.prob.W"), # target: 0.00385
-        initial_proposals = dplyr::tibble(
-          exo.trans.prob.W = seq(0.05, 0.30, length.out = n_sims),
-        ),
-        make_next_proposals = swfcalib::make_shrink_proposer(n_sims, shrink = 2),
-        get_result = swfcalib::determ_poly_end(0.001, poly_n = 5)
-      )
-
-      # job1 = list(
-      #   targets = paste0("exo.ir100.", c("B", "H", "O", "W")),
-      #   targets_val = c(1.618, 0.7345, 0.5695, 0.2891),
-      #   params = paste0("exo.trans.prob.", c("B", "H", "O", "W")),
-      #   initial_proposals = dplyr::tibble(
-      #     exo.trans.prob.B = sample(seq(0.1, 0.6, length.out = n_sims)), # Need to update for parameters
-      #     exo.trans.prob.H = sample(seq(0.1, 0.6, length.out = n_sims)),
-      #     exo.trans.prob.O = sample(seq(0.1, 0.6, length.out = n_sims)),
-      #     exo.trans.prob.W = sample(seq(0.05, 0.30, length.out = n_sims))
+      # wave1 = list(
+      #   job1 = list(
+      #         targets = "cc.vsupp.B",
+      #         targets_val = 0.571,
+      #         params = c("tx.halt.full.or_1"),
+      #         initial_proposals = dplyr::tibble(
+      #           tx.halt.full.or_1 = sample(seq(0.5, 1.5, length.out = n_sims)),
+      #         ),
+      #         make_next_proposals = swfcalib::make_shrink_proposer(n_sims, shrink = 2),
+      #         get_result = swfcalib::determ_poly_end(0.001, poly_n = 5)
+      #       ),
+      #   job2 = list(
+      #         targets = "cc.vsupp.H",
+      #         targets_val = 0.675,
+      #         params = c("tx.halt.full.or_2"),
+      #         initial_proposals = dplyr::tibble(
+      #           tx.halt.full.or_2 = sample(seq(0.4, 0.8, length.out = n_sims)),
+      #         ),
+      #         make_next_proposals = swfcalib::make_shrink_proposer(n_sims, shrink = 2),
+      #         get_result = swfcalib::determ_poly_end(0.001, poly_n = 5)
+      #       ),
+      #   job3 = list(
+      #     targets = "cc.vsupp.O",
+      #     targets_val = 0.586,
+      #     params = c("tx.halt.full.or_3"),
+      #     initial_proposals = dplyr::tibble(
+      #       tx.halt.full.or_3 = sample(seq(1, 2, length.out = n_sims)),
+      #     ),
+      #     make_next_proposals = swfcalib::make_shrink_proposer(n_sims, shrink = 2),
+      #     get_result = swfcalib::determ_poly_end(0.001, poly_n = 5)
       #   ),
-      #   make_next_proposals =
-      #     swfcalib::make_proposer_se_range(n_sims, retain_prop = 0.3),
-      #   get_result = swfcalib::determ_end_thresh(
-      #     thresholds = rep(0.05, 4),
-      #     n_enough = 100
+      #   job4 = list(
+      #     targets = "cc.vsupp.W",
+      #     targets_val = 0.617,
+      #     params = c("tx.halt.full.or_4"),
+      #     initial_proposals = dplyr::tibble(
+      #       tx.halt.full.or_4 = sample(seq(1, 2, length.out = n_sims)),
+      #     ),
+      #     make_next_proposals = swfcalib::make_shrink_proposer(n_sims, shrink = 2),
+      #     get_result = swfcalib::determ_poly_end(0.001, poly_n = 5)
       #   )
-      # )
-    ),
+      # ),
+# Wave 3 (Exogenous Incidence Rate)
+    # wave1 = list(
+    #   job1 = list(
+    #     targets = "exo.ir100.B",
+    #     targets_val = 1.618,
+    #     params = c("exo.trans.prob.B"), # target: 0.00385
+    #     initial_proposals = dplyr::tibble(
+    #       exo.trans.prob.B = seq(0.1, 0.6, length.out = n_sims),
+    #     ),
+    #     make_next_proposals = swfcalib::make_shrink_proposer(n_sims, shrink = 2),
+    #     get_result = swfcalib::determ_poly_end(0.001, poly_n = 5)
+    #   ),
+    #   job2 = list(
+    #     targets = "exo.ir100.H",
+    #     targets_val = 0.7345,
+    #     params = c("exo.trans.prob.H"), # target: 0.00385
+    #     initial_proposals = dplyr::tibble(
+    #       exo.trans.prob.H = seq(0.1, 0.6, length.out = n_sims),
+    #     ),
+    #     make_next_proposals = swfcalib::make_shrink_proposer(n_sims, shrink = 2),
+    #     get_result = swfcalib::determ_poly_end(0.001, poly_n = 5)
+    #   ),
+    #   job3 = list(
+    #     targets = "exo.ir100.O",
+    #     targets_val = 0.5695,
+    #     params = c("exo.trans.prob.O"), # target: 0.00385
+    #     initial_proposals = dplyr::tibble(
+    #       exo.trans.prob.O = seq(0.1, 0.6, length.out = n_sims),
+    #     ),
+    #     make_next_proposals = swfcalib::make_shrink_proposer(n_sims, shrink = 2),
+    #     get_result = swfcalib::determ_poly_end(0.001, poly_n = 5)
+    #   ),
+    #   job4 = list(
+    #     targets = "exo.ir100.W",
+    #     targets_val = 0.2891,
+    #     params = c("exo.trans.prob.W"), # target: 0.00385
+    #     initial_proposals = dplyr::tibble(
+    #       exo.trans.prob.W = seq(0.05, 0.30, length.out = n_sims),
+    #     ),
+    #     make_next_proposals = swfcalib::make_shrink_proposer(n_sims, shrink = 2),
+    #     get_result = swfcalib::determ_poly_end(0.001, poly_n = 5)
+    #   )
+    # ),
 # Wave 4 (Trans Scale and Total Incidence Rate)
-    wave3 = list(
+    wave1 = list(
       job1 = list(
         targets = paste0("ir100.", c("B", "H", "O", "W")),
         targets_val = c(6.42, 2.04, 1.71, 0.73),
@@ -345,7 +327,7 @@ calib_object <- list(
         make_next_proposals =
           swfcalib::make_proposer_se_range(n_sims, retain_prop = 0.3),
         get_result = swfcalib::determ_end_thresh(
-          thresholds = rep(0.05, 4),
+          thresholds = c(0.3, 0.1, 0.1, 0.05),
           n_enough = 100
         )
       )
