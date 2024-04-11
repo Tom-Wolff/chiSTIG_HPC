@@ -6,7 +6,7 @@
 context <- "hpc"
 
 epistats <- readRDS("./data/intermediate/estimates/epistats-local.rds")
-netstats <- readRDS("./data/intermediate/estimates/netstats-novenues-local.rds")
+netstats <- readRDS("./data/intermediate/estimates/netstats-local.rds")
 # netstats <- readRDS("data/intermediate/estimates/netstats-local.rds")
 # Is the aging out of the older initial nodes driving HIV extinction?
 # Let's level out the age distribution and find out
@@ -20,11 +20,11 @@ path_to_restart <- paste0(est_dir, "restart-", context, ".rds")
 # `netsim` Parameters
 prep_start <- 52 * 2
 param <- EpiModel::param.net(
-  data.frame.params   = read.csv("./data/input/params_chistig_jan29.csv"),
-  netstats            = netstats,
-  epistats            = epistats,
-  prep.start          = Inf,
-  riskh.start         = Inf
+  data.frame.params = readr::read_csv("data/input/params_chistig_feb19.csv"),
+  netstats          = netstats,
+  epistats          = epistats,
+  prep.start        = Inf,
+  riskh.start       = Inf
 )
 
 # Initial conditions (default prevalence initialized in epistats)

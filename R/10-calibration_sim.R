@@ -129,7 +129,7 @@ control <- EpiModelHIV::control_msm(
 
 # Receptive(102-186)/10000
 # Insertive (1-19)/10000
-n_scenarios <- 5
+n_scenarios <- 4
 scenarios_df <- tibble(
   # mandatory columns
   .scenario.id = as.character(seq_len(n_scenarios)),
@@ -149,16 +149,16 @@ scenarios_df <- tibble(
   # a.rate = seq(0.001386813, 0.001386813, length.out = n_scenarios)#,
 
   # Exogenous Infection Rates
-  exo.trans.prob.B = seq(0.4900, 0.4900, length.out = n_scenarios), #
-  exo.trans.prob.H = seq(0.2000, 0.2000, length.out = n_scenarios),
-  exo.trans.prob.O = seq(0.1725, 0.1725, length.out = n_scenarios),
-  exo.trans.prob.W = seq(0.0900, 0.0900, length.out = n_scenarios),
+  # exo.trans.prob.B = seq(0.4900, 0.4900, length.out = n_scenarios), #
+  # exo.trans.prob.H = seq(0.2000, 0.2000, length.out = n_scenarios),
+  # exo.trans.prob.O = seq(0.1725, 0.1725, length.out = n_scenarios),
+  # exo.trans.prob.W = seq(0.0900, 0.0900, length.out = n_scenarios),
  #
   # HIV Testing Rate
-   hiv.test.rate_1 = seq(0.0041, 0.0041, length.out = n_scenarios),
-   hiv.test.rate_2 = seq(0.004192807, 0.004192807, length.out = n_scenarios),
-   hiv.test.rate_3 = seq(.0042, 0.0048, length.out = n_scenarios),
-   hiv.test.rate_4 = seq(0.0055, 0.0055, length.out = n_scenarios),
+   # hiv.test.rate_1 = seq(0.0041, 0.0041, length.out = n_scenarios),
+   # hiv.test.rate_2 = seq(0.004192807, 0.004192807, length.out = n_scenarios),
+   # hiv.test.rate_3 = seq(.0042, 0.0048, length.out = n_scenarios),
+   # hiv.test.rate_4 = seq(0.0055, 0.0055, length.out = n_scenarios),
  #
  #  # Probability that an HIV+ node will initiate ART treatment
  #  tx.init.rate_1 = seq(0.3622703, 0.3622703, length.out = n_scenarios),
@@ -177,15 +177,15 @@ scenarios_df <- tibble(
  # prep.start.prob_4 = seq(     0.765625,      1, length.out = n_scenarios),
 
  #  # ART halting
-  tx.halt.partial.rate_1 = seq(     0.004825257,      0.004825257, length.out = n_scenarios),
-  tx.halt.partial.rate_2 = seq(     0.00453566,      0.00453566, length.out = n_scenarios),
-  tx.halt.partial.rate_3 = seq(     0.003050059,      0.003050059, length.out = n_scenarios),
-  tx.halt.partial.rate_4 = seq(     0.003050059,      0.003050059, length.out = n_scenarios),
+  # tx.halt.partial.rate_1 = seq(     0.004825257,      0.004825257, length.out = n_scenarios),
+  # tx.halt.partial.rate_2 = seq(     0.00453566,      0.00453566, length.out = n_scenarios),
+  # tx.halt.partial.rate_3 = seq(     0.003050059,      0.003050059, length.out = n_scenarios),
+  # tx.halt.partial.rate_4 = seq(     0.003050059,      0.003050059, length.out = n_scenarios),
 
-  tx.halt.full.or_1 = seq(     0.9,      0.9, length.out = n_scenarios),
-  tx.halt.full.or_2 = seq(     0.63,      0.63, length.out = n_scenarios),
-  tx.halt.full.or_3 = seq(     1.45,      1.45, length.out = n_scenarios),
-  tx.halt.full.or_4 = seq(     1.25,      1.25, length.out = n_scenarios),
+  # tx.halt.full.or_1 = seq(     0.9,      0.9, length.out = n_scenarios),
+  # tx.halt.full.or_2 = seq(     0.63,      0.63, length.out = n_scenarios),
+  # tx.halt.full.or_3 = seq(     1.45,      1.45, length.out = n_scenarios),
+  # tx.halt.full.or_4 = seq(     1.25,      1.25, length.out = n_scenarios),
  #
  #
  # # ART reinitiation after disengagement (Keep Fixed for now,
@@ -209,9 +209,9 @@ scenarios_df <- tibble(
  # hiv.trans.scale_4 = seq(     0.8,      1.2, length.out = n_scenarios)
 
  # This was for calibrating on prevalence
- hiv.trans.scale_1 = seq(       9,     10, length.out = n_scenarios),
- hiv.trans.scale_2 = seq(     5.4,      5.6, length.out = n_scenarios),
- hiv.trans.scale_3 = seq(     3.0,      3.2, length.out = n_scenarios),
+ hiv.trans.scale_1 = seq(       17,     19, length.out = n_scenarios),
+ hiv.trans.scale_2 = seq(     5.2,      5.2, length.out = n_scenarios),
+ hiv.trans.scale_3 = seq(     3.04,      3.04, length.out = n_scenarios),
  hiv.trans.scale_4 = seq(     1,      1, length.out = n_scenarios)
 
   # tt.partial.supp.prob_1 = c(0, .2),

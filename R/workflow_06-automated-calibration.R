@@ -319,7 +319,7 @@ calib_object <- list(
         targets_val = c(6.42, 2.04, 1.71, 0.73),
         params = paste0("hiv.trans.scale_", 1:4),
         initial_proposals = dplyr::tibble(
-          hiv.trans.scale_1 = sample(seq(8, 11, length.out = n_sims)), # Need to update for parameters
+          hiv.trans.scale_1 = sample(seq(8, 19, length.out = n_sims)), # Need to update for parameters
           hiv.trans.scale_2 = sample(seq(4, 7, length.out = n_sims)),
           hiv.trans.scale_3 = sample(seq(2, 5, length.out = n_sims)),
           hiv.trans.scale_4 = sample(seq(0.5, 1.5, length.out = n_sims))

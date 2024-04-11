@@ -11,7 +11,7 @@ netstats <- readRDS("./data/intermediate/estimates/netstats-novenues-local.rds")
 context <- "local"
 est_dir <- "blah"
 prep_start = 52*2
-source("./R/utils-chistig_basic_inputs.R") # generate `path_to_est`, `param` and `init`
+source("./R/utils-chistig_basic_inputs.R") # generate `path_to_est`, `param` and `initchis`
 # path_to_est <- "./data/intermediate/estimates/basic_netest-local.rds"
 # path_to_est      <- "/Users/wms1212/Desktop/ChiSTIG_model/epimodel/data/intermediate/estimates/venue_only_netest-local.rds"
 path_to_est <- "./data/intermediate/estimates/basic_netest-local.rds"
@@ -54,7 +54,7 @@ load_diag <- function(this_dir, nsim = 1) {
   return(sim_targets)
 }
 
-sim_targets <- load_diag(this_dir = getwd(), nsim = 5)
+sim_targets <- load_diag(this_dir = getwd(), nsim = 4)
 
 # Custom function for generating summary plots ---------------------------------
 target_plot <- function(data, group, var, benchmark = NULL, title = NULL,
@@ -542,6 +542,7 @@ target_plot(data = sim_targets,
             group = "sim",
             benchmark = mean(1.71),
             title = paste("Plot ", i, ": Endogenous Incidence Rate (Other)", sep = ""))
+
 i <- i+1
 target_plot(data = sim_targets,
             var = "ir100.W",

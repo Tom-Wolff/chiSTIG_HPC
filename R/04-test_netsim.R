@@ -6,6 +6,9 @@
 library("EpiModelHIV")
 library("chiSTIGmodules")
 
+# library("chiSTIGmodules")
+# devtools::load_all("~/Desktop/chiSTIGmodules")
+
 # Settings ---------------------------------------------------------------------
 source("R/utils-0_project_settings.R")
 source("./R/utils-targets.R")
@@ -22,7 +25,7 @@ netstats <- readRDS("data/intermediate/estimates/netstats-novenues-local.rds")
 
 
 ##### `est` object for basic ERGMs (no venues or apps)
- est      <- readRDS("data/intermediate/estimates/basic_netest-local.rds")
+# est      <- readRDS("data/intermediate/estimates/basic_netest-local.rds")
 ##### `est` object for full ERGMs (venues and apps)
 # est      <- readRDS("data/intermediate/estimates/full_netest-local.rds")
 ##### `est` object for test ERGMs
@@ -33,6 +36,7 @@ netstats <- readRDS("data/intermediate/estimates/netstats-novenues-local.rds")
 # netstats <- readRDS("data/intermediate/estimates/template_netstats-local.rds")
 # #### `est` object for template ERMGs
 # est <- readRDS("data/intermediate/estimates/template_netest-local.rds")
+est <- readRDS("data/intermediate/estimates/basic_netest-local.rds")
 
 # Is the aging out of the older initial nodes driving HIV extinction?
 # Let's level out the age distribution and find out
@@ -44,11 +48,11 @@ netstats <- readRDS("data/intermediate/estimates/netstats-novenues-local.rds")
 
 prep_start <- 52 * 2
 param <- EpiModel::param.net(
-  data.frame.params = readr::read_csv("data/input/params_chistig_nov30.csv"),
+  data.frame.params = readr::read_csv("data/input/params_chistig_feb19.csv"),
   netstats          = netstats,
   epistats          = epistats,
-  prep.start        = prep_start,
-  riskh.start       = prep_start - 53
+  prep.start        = Inf,
+  riskh.start       = Inf
 )
 
 # param <- EpiModel::param.net(
@@ -76,12 +80,13 @@ init <- EpiModelHIV::init_msm(
 
 # Control settings
 control <- EpiModelHIV::control_msm(
-  # nsteps = 1000,
-   # nsteps = calibration_end + 520,
-   nsteps =  prep_start + 52 * 2,
-  nsims = 1,
+  #  nsteps = 400,
+    nsteps = calibration_end + 520,
+   # nsteps =  prep_start + 52 * 2,
+  nsims = 10,
   ncores = 10,
   cumulative.edgelist = TRUE,
+  truncate.el.cuml = 400,
   raw.output = TRUE,
   .tracker.list       = calibration_trackers,
   initialize.FUN =                  chiSTIGmodules::initialize_msm_chi,
@@ -94,7 +99,7 @@ control <- EpiModelHIV::control_msm(
   hivtx.FUN =                       chiSTIGmodules::hivtx_msm_chi,
   hivprogress.FUN =                 chiSTIGmodules::hivprogress_msm_chi,
   hivvl.FUN =                       chiSTIGmodules::hivvl_msm_chi,
-  resim_nets.FUN =                  chiSTIGmodules::simnet_msm_chi,
+  resim_nets.FUN =                  chiSTIGmodules:::simnet_msm_chi,
   acts.FUN =                        chiSTIGmodules::acts_msm_chi,
   condoms.FUN =                     chiSTIGmodules::condoms_msm_chi,
   position.FUN =                    chiSTIGmodules::position_msm_chi,
@@ -185,7 +190,105 @@ print(control)
 
 
 # Epidemic simulation
+# debug(acts_msm_chi)
+# debug(condoms_msm_chi)
+# debug(position_msm_chi)
+# debug(hivtrans_msm_chi)
 sim <- EpiModel::netsim(est, param, init, control)
+
+sim_list <- as.list(sim)
+
+# Combine pertinent elements of `sim_list` to a single data frame
+full_data <- dplyr::bind_rows(lapply(sim_list[[1]]$raw.records, function(x){x$object}))
+
+# Create a separate object containing just the infection acts
+inf_events <- full_data %>% dplyr::filter(type == 4) %>%
+  ### Select only relevant variables
+  select(head_uid, tail_uid,
+         ### Time of infection might be useful
+         inf_time = time) %>%
+  ### Infection indicator to confirm merge
+  mutate(infection = 1)
+
+# Heads and tails of the act list are arranged by each node's relative position
+# in a sexual act. To maximize merging, we need to create a second `inf_events`
+# data frame where head and tail are reversed, then combine this with the original
+# `inf_events`
+inf_events2 <- inf_events %>% dplyr::select(head_uid = tail_uid,
+                                            tail_uid = head_uid,
+                                            inf_time, infection)
+inf_events <- dplyr::bind_rows(inf_events, inf_events2)
+
+# Now let's store our actual edgelist in its own object
+edges <- full_data %>% dplyr::filter(type != 4) %>%
+  group_by(head_uid, tail_uid) %>%
+  slice(1)
+
+# Merge in `inf_events`
+merged_data <- edges %>% dplyr::left_join(inf_events, by = c("head_uid", "tail_uid"))
+
+# What percentage of cases in the infection act list successfully merged?
+# Note that we use `nrow(inf_events2)` here for the accurate denominator
+sum(merged_data$infection, na.rm = TRUE)/nrow(inf_events2)
+
+merged_data %>% group_by(type) %>%
+  summarize(sum(infection, na.rm = TRUE))
+
+# Now extract just the partnerships that led to infection
+inf_edges <- merged_data %>%
+  filter(infection == 1)
+
+
+for (i in 1:100) {
+
+  inf_events <- full_test %>% dplyr::filter(type == 4) %>%
+    # Filter time on infections to be last 520 weeks (we store past 600) for edgelist
+    filter(time < (max(time) - i)) %>%
+    # filter(time == 400) %>%
+    select(head_uid, tail_uid, inf_time = time) %>%
+    mutate(infection = 1)
+
+  inf_events2 <- inf_events %>% dplyr::select(head_uid = tail_uid,
+                                              tail_uid = head_uid,
+                                              inf_time, infection)
+  inf_events <- dplyr::bind_rows(inf_events, inf_events2)
+
+
+  inf_events <- inf_events %>% select(head_uid, tail_uid, infection)
+
+  edges <- full_test %>% dplyr::filter(type != 4)
+
+  edge_test <- edges %>% dplyr::left_join(inf_events, by = c("head_uid", "tail_uid"))
+
+  print(sum(edge_test$infection, na.rm = TRUE)/nrow(inf_events2))
+
+}
+
+
+test2 <- as.data.frame(dplyr::bind_rows(test[[1]]$raw.records))$object
+colnames(test2) <- c()
+
+test3 <- test2 %>% dplyr::filter(type == "hivtrans")
+
+test_main <- test2 %>% dplyr::filter(type == "main") %>%
+  dplyr::group_by(ego_id, alter_id) %>%
+  summarize(count = n())
+
+test3 <- test2 %>%
+  dplyr::arrange(time) %>%
+  dplyr::group_by(ego_id, alter_id, type) %>%
+  dplyr::slice(1)
+
+test4 <- test2 %>%
+  dplyr::group_by(ego_id, alter_id) %>%
+  summarize(count = n())
+
+sim$netstats
+
+test <- sim[[1]]$el.cuml[[1]]
+
+test <- sim[[1]]$el[[1]]
+
 check_this <- sim[[1]]
 
 # Total Network Size
