@@ -147,10 +147,10 @@ calib_object <- list(
       exo.trans.prob.O = 0.1640618,
       exo.trans.prob.W = 0.08310792,
       # Trans Scale
-      hiv.trans.scale_1 = 9.639344,
-      hiv.trans.scale_2 = 5.202113,
-      hiv.trans.scale_3 = 3.04742,
-      hiv.trans.scale_4 = 0.9872649
+      hiv.trans.scale_1 = 14.5,
+      hiv.trans.scale_2 = 3.5,
+      hiv.trans.scale_3 = 2,
+      hiv.trans.scale_4 = 1
     ),
     root_directory = "data/calib",
     max_iteration = 100,
@@ -319,15 +319,15 @@ calib_object <- list(
         targets_val = c(6.42, 2.04, 1.71, 0.73),
         params = paste0("hiv.trans.scale_", 1:4),
         initial_proposals = dplyr::tibble(
-          hiv.trans.scale_1 = sample(seq(15, 19, length.out = n_sims)), # Need to update for parameters
-          hiv.trans.scale_2 = sample(seq(1, 3, length.out = n_sims)),
+          hiv.trans.scale_1 = sample(seq(10, 19, length.out = n_sims)), # Need to update for parameters
+          hiv.trans.scale_2 = sample(seq(2.5, 4.5, length.out = n_sims)),
           hiv.trans.scale_3 = sample(seq(1, 3, length.out = n_sims)),
           hiv.trans.scale_4 = sample(seq(0.9, 1.1, length.out = n_sims))
         ),
         make_next_proposals =
           swfcalib::make_proposer_se_range(n_sims, retain_prop = 0.3),
         get_result = swfcalib::determ_end_thresh(
-          thresholds = c(0.3, 0.1, 0.1, 0.05),
+          thresholds = c(0.5, 0.5, 0.1, 0.05),
           n_enough = 100
         )
       )
