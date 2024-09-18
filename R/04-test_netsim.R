@@ -4,10 +4,10 @@
 
 # Libraries  -------------------------------------------------------------------
 library("EpiModelHIV")
-library("chiSTIGmodules")
+# library("chiSTIGmodules")
 
 # library("chiSTIGmodules")
-# devtools::load_all("~/Desktop/chiSTIGmodules")
+ devtools::load_all("~/Desktop/chiSTIGmodules")
 
 # Settings ---------------------------------------------------------------------
 source("R/utils-0_project_settings.R")
@@ -15,13 +15,16 @@ source("./R/utils-targets.R")
 
 # Necessary files
 epistats <- readRDS("data/intermediate/estimates/epistats-local.rds")
-epistats$age.breaks <- c(16, 20, 30)
+epistats$age.breaks <- c(16, 21, 30)
 # age limits probably needs to be maxed at 31
 epistats$age.limits <- c(16, 30)
 
-netstats <- readRDS("data/intermediate/estimates/netstats-local.rds")
-# `netstats` without venues target stats, in case this changes anything
-netstats <- readRDS("data/intermediate/estimates/netstats-novenues-local.rds")
+# netstats <- readRDS("data/intermediate/estimates/netstats-local.rds")
+# # `netstats` without venues target stats, in case this changes anything
+# netstats <- readRDS("data/intermediate/estimates/netstats-novenues-local.rds")
+
+netstats <- readRDS("data/intermediate/estimates/netstats-level-local.rds")
+
 
 
 ##### `est` object for basic ERGMs (no venues or apps)
@@ -36,24 +39,61 @@ netstats <- readRDS("data/intermediate/estimates/netstats-novenues-local.rds")
 # netstats <- readRDS("data/intermediate/estimates/template_netstats-local.rds")
 # #### `est` object for template ERMGs
 # est <- readRDS("data/intermediate/estimates/template_netest-local.rds")
-est <- readRDS("data/intermediate/estimates/basic_netest-local.rds")
+est <- readRDS("data/intermediate/estimates/basic_netest-level-local.rds")
+
+est$fit_main$coef.diss <- netstats$main$dissolution
+est$fit_casl$coef.diss <- netstats$casl$dissolution
+
+age_race <- as.matrix(table(netstats$attr$race, netstats$attr$age.grp))
+age_race
+
+# Expected age group counts for level age distribution
+level_vals <- data.frame(under21 = round(rowSums(age_race)*(5/14)),
+                         over21 = round(rowSums(age_race)*(9/14)))
+
+for (i in 1:4) {
+
+race_positions <- which(netstats$attr$race == i)
+under21_pos <- which(netstats$attr$race == i & netstats$attr$age < 21)
+over21_pos <- which(netstats$attr$race == i & netstats$attr$age >= 21)
+
+if (length(under21_pos) < level_vals[i,1]) {
+  netstats$attr$age[sample(over21_pos, size = (length(over21_pos) - level_vals[i,2]))] <- sample(16:20, size = ((length(over21_pos) - level_vals[i,2])), replace = TRUE) + sample(1:1000,  size = ((length(over21_pos) - level_vals[i,2])), replace = TRUE)/1000
+} else if (length(under21_pos) > level_vals[i,1]) {
+  netstats$attr$age[sample(under21_pos, size = (length(under21_pos) - level_vals[i,1]))]<- sample(21:29, size = ((length(under21_pos) - level_vals[i,1])), replace = TRUE) + sample(1:1000,  size = ((length(under21_pos) - level_vals[i,1])), replace = TRUE)/1000
+} else {
+  next
+}
+}
+
+netstats$attr$age.grp <- ifelse(netstats$attr$age < 21, 1, 2)
+
+table(netstats$attr$race, netstats$attr$age.grp)
+
+
+level_vals
 
 # Is the aging out of the older initial nodes driving HIV extinction?
 # Let's level out the age distribution and find out
  netstats$attr$age <- sample(16:29, length(netstats$attr$age), replace = TRUE)
  netstats$attr$age <- netstats$attr$age + sample(1:1000, length(netstats$attr$age), replace = TRUE)/1000
+ netstats$attr$age.grp <- ifelse(netstats$attr$age < 21, 1, 2)
 
-
+ data.frame(age.grp = netstats$attr$age.grp,
+                        age = netstats$attr$age)
 
 
 prep_start <- 52 * 2
 param <- EpiModel::param.net(
-  data.frame.params = readr::read_csv("data/input/params_chistig_feb19.csv"),
+  data.frame.params = readr::read_csv("data/input/params_chistig_apr18.csv"),
   netstats          = netstats,
   epistats          = epistats,
   prep.start        = Inf,
   riskh.start       = Inf
 )
+
+# param$venue.treat <- 1
+# param$app.treat <- 1
 
 # param <- EpiModel::param.net(
 #   data.frame.params = readr::read_csv("data/input/params.csv"),
@@ -80,14 +120,15 @@ init <- EpiModelHIV::init_msm(
 
 # Control settings
 control <- EpiModelHIV::control_msm(
-  #  nsteps = 400,
+  #  nsteps = 200,
     nsteps = calibration_end + 520,
    # nsteps =  prep_start + 52 * 2,
-  nsims = 10,
-  ncores = 10,
+  nsims = 1,
+  ncores = 1,
   cumulative.edgelist = TRUE,
-  truncate.el.cuml = 400,
+  truncate.el.cuml = Inf,
   raw.output = TRUE,
+  save.nwstats = TRUE,
   .tracker.list       = calibration_trackers,
   initialize.FUN =                  chiSTIGmodules::initialize_msm_chi,
   aging.FUN =                       chiSTIGmodules::aging_msm_chi,
@@ -111,7 +152,7 @@ control <- EpiModelHIV::control_msm(
   stitx.FUN =                       chiSTIGmodules::stitx_msm_chi,
   prev.FUN =                        chiSTIGmodules::prevalence_msm_chi,
   cleanup.FUN =                     chiSTIGmodules::cleanup_msm_chi,
-  module.order = c("aging.FUN", "departure.FUN", "arrival.FUN", # "venues.FUN",
+  module.order = c( "aging.FUN", "departure.FUN", "arrival.FUN", # "venues.FUN",
                    "partident.FUN", "hivtest.FUN", "hivtx.FUN", "hivprogress.FUN",
                    "hivvl.FUN", "resim_nets.FUN", "acts.FUN", "condoms.FUN",
                    "position.FUN", "prep.FUN", "hivtrans.FUN", "exotrans.FUN",
@@ -196,10 +237,442 @@ print(control)
 # debug(hivtrans_msm_chi)
 sim <- EpiModel::netsim(est, param, init, control)
 
+
+
 sim_list <- as.list(sim)
 
+
+plot(sim_list[[1]]$epi$mean_deg_main, main = "Main Partnerships")
+
+
+plot(sim_list[[1]]$epi$n_edges_main/sim_list[[1]]$epi$num, main = "Main Partnerships")
+
+library(tidyverse)
+
+# GENERAL NUMBER OF EDGES
+
+data.frame(y = sim_list[[1]]$epi$n_edges_main) %>%
+  mutate(x = 1:n()) %>%
+ggplot(aes(x = x,
+           y = y)) +
+  geom_line() +
+  theme_classic() +
+  geom_hline(yintercept = 1630.057344, linetype = "dotted") +
+  geom_hline(yintercept = netstats$main$edges) +
+  geom_hline(yintercept = 1172.186555, linetype = "dotted") +
+  labs(title = "Number of Main Partnerships",
+       x = "Time",
+       y = NULL)
+
+data.frame(y = sim_list[[1]]$epi$mean_deg_main) %>%
+  mutate(x = 1:n()) %>%
+  ggplot(aes(x = x,
+             y = y)) +
+  geom_line() +
+  theme_classic() +
+  # geom_hline(yintercept = 1630.057344, linetype = "dotted") +
+  # geom_hline(yintercept = netstats$main$edges) +
+  # geom_hline(yintercept = 1172.186555, linetype = "dotted") +
+  labs(title = "Mean Degree (Main Partnerships)",
+       x = "Time",
+       y = NULL)
+
+
+data.frame(y = sim_list[[1]]$epi$mean_deg_main.under21) %>%
+  mutate(x = 1:n()) %>%
+  ggplot(aes(x = x,
+             y = y)) +
+  geom_line() +
+  theme_classic() +
+  # geom_hline(yintercept = 1630.057344, linetype = "dotted") +
+  # geom_hline(yintercept = netstats$main$edges) +
+  # geom_hline(yintercept = 1172.186555, linetype = "dotted") +
+  labs(title = "Mean Degree (Main Partnerships, Under 21)",
+       x = "Time",
+       y = NULL)
+
+data.frame(y = sim_list[[1]]$epi$mean_deg_main.over21) %>%
+  mutate(x = 1:n()) %>%
+  ggplot(aes(x = x,
+             y = y)) +
+  geom_line() +
+  theme_classic() +
+  # geom_hline(yintercept = 1630.057344, linetype = "dotted") +
+  # geom_hline(yintercept = netstats$main$edges) +
+  # geom_hline(yintercept = 1172.186555, linetype = "dotted") +
+  labs(title = "Mean Degree (Main Partnerships, Over 21)",
+       x = "Time",
+       y = NULL)
+
+
+data.frame(y = sim_list[[1]]$epi$mean_deg_cas.under21) %>%
+  mutate(x = 1:n()) %>%
+  ggplot(aes(x = x,
+             y = y)) +
+  geom_line() +
+  theme_classic() +
+  # geom_hline(yintercept = 1630.057344, linetype = "dotted") +
+  # geom_hline(yintercept = netstats$main$edges) +
+  # geom_hline(yintercept = 1172.186555, linetype = "dotted") +
+  labs(title = "Mean Degree (Casual Partnerships, Under 21)",
+       x = "Time",
+       y = NULL)
+
+data.frame(y = sim_list[[1]]$epi$mean_deg_cas.over21) %>%
+  mutate(x = 1:n()) %>%
+  ggplot(aes(x = x,
+             y = y)) +
+  geom_line() +
+  theme_classic() +
+  # geom_hline(yintercept = 1630.057344, linetype = "dotted") +
+  # geom_hline(yintercept = netstats$main$edges) +
+  # geom_hline(yintercept = 1172.186555, linetype = "dotted") +
+  labs(title = "Mean Degree (Casual Partnerships, Over 21)",
+       x = "Time",
+       y = NULL)
+
+
+data.frame(y = sim_list[[1]]$epi$n_edges_casual) %>%
+  mutate(x = 1:n()) %>%
+  ggplot(aes(x = x,
+             y = y)) +
+  geom_line() +
+  theme_classic() +
+  geom_hline(yintercept = 2386.663237, linetype = "dotted") +
+  geom_hline(yintercept = netstats$casl$edges) +
+  geom_hline(yintercept = 1591.149932, linetype = "dotted") +
+  labs(title = "Number of Casual Partnerships",
+       x = "Time",
+       y = NULL)
+
+data.frame(y = sim_list[[1]]$epi$mean_deg_cas) %>%
+  mutate(x = 1:n()) %>%
+  ggplot(aes(x = x,
+             y = y)) +
+  geom_line() +
+  theme_classic() +
+  # geom_hline(yintercept = 1630.057344, linetype = "dotted") +
+  # geom_hline(yintercept = netstats$main$edges) +
+  # geom_hline(yintercept = 1172.186555, linetype = "dotted") +
+  labs(title = "Mean Degree (Casual Partnerships)",
+       x = "Time",
+       y = NULL)
+
+data.frame(y = sim_list[[1]]$epi$n_edges_onetime) %>%
+  mutate(x = 1:n()) %>%
+  ggplot(aes(x = x,
+             y = y)) +
+  geom_line() +
+  theme_classic() +
+  geom_hline(yintercept = 95.26738158, linetype = "dotted") +
+  geom_hline(yintercept = netstats$inst$edges) +
+  geom_hline(yintercept = 60.6132855832735, linetype = "dotted") +
+  labs(title = "Number of One-Time Partnerships",
+       x = "Time",
+       y = NULL)
+
+# POPULATION SIZE
+
+data.frame(y = sim_list[[1]]$epi$num) %>%
+  mutate(x = 1:n()) %>%
+  ggplot(aes(x = x,
+             y = y)) +
+  geom_line() +
+  theme_classic() +
+  geom_hline(yintercept = length(netstats$attr$numeric.id)) +
+  labs(title = "Population Size",
+       x = "Time",
+       y = NULL)
+
+# PROPORTION BY RACE
+
+data.frame(y = sim_list[[1]]$epi$n__B/sim_list[[1]]$epi$num) %>%
+  mutate(x = 1:n()) %>%
+  ggplot(aes(x = x,
+             y = y)) +
+  geom_line() +
+  theme_classic() +
+  geom_hline(yintercept = mean(netstats$attr$race == 1)) +
+  labs(title = "Proportion of Population Black",
+       x = "Time",
+       y = "Proportion") +
+  scale_y_continuous(breaks = seq(0, .4, .1),
+                     limits = c(0, .4))
+
+data.frame(y = sim_list[[1]]$epi$n__H/sim_list[[1]]$epi$num) %>%
+  mutate(x = 1:n()) %>%
+  ggplot(aes(x = x,
+             y = y)) +
+  geom_line() +
+  theme_classic() +
+  geom_hline(yintercept = mean(netstats$attr$race == 2)) +
+  labs(title = "Proportion of Population Hispanic",
+       x = "Time",
+       y = "Proportion") +
+  scale_y_continuous(breaks = seq(0, .4, .1),
+                     limits = c(0, .4))
+
+data.frame(y = sim_list[[1]]$epi$n__O/sim_list[[1]]$epi$num) %>%
+  mutate(x = 1:n()) %>%
+  ggplot(aes(x = x,
+             y = y)) +
+  geom_line() +
+  theme_classic() +
+  geom_hline(yintercept = mean(netstats$attr$race == 3)) +
+  labs(title = "Proportion of Population Other",
+       x = "Time",
+       y = "Proportion") +
+  scale_y_continuous(breaks = seq(0, .4, .1),
+                     limits = c(0, .4))
+
+data.frame(y = sim_list[[1]]$epi$n__W/sim_list[[1]]$epi$num) %>%
+  mutate(x = 1:n()) %>%
+  ggplot(aes(x = x,
+             y = y)) +
+  geom_line() +
+  theme_classic() +
+  geom_hline(yintercept = mean(netstats$attr$race == 4)) +
+  labs(title = "Proportion of Population White",
+       x = "Time",
+       y = "Proportion") +
+  scale_y_continuous(breaks = seq(0, .4, .1),
+                     limits = c(0, .4))
+
+# PROPORTION BY AGE GROUP
+
+data.frame(y = sim_list[[1]]$epi$num.16to20/sim_list[[1]]$epi$num) %>%
+  mutate(x = 1:n()) %>%
+  ggplot(aes(x = x,
+             y = y)) +
+  geom_line() +
+  theme_classic() +
+  geom_hline(yintercept = mean(netstats$attr$age.grp == 1)) +
+  labs(title = "Proportion of Population Aged 16-20",
+       x = "Time",
+       y = "Proportion") +
+  scale_y_continuous(breaks = seq(0, .4, .1),
+                     limits = c(0, .4))
+
+data.frame(y = sim_list[[1]]$epi$num.21plus/sim_list[[1]]$epi$num) %>%
+  mutate(x = 1:n()) %>%
+  ggplot(aes(x = x,
+             y = y)) +
+  geom_line() +
+  theme_classic() +
+  geom_hline(yintercept = mean(netstats$attr$age.grp == 2)) +
+  labs(title = "Proportion of Population Aged 21-29",
+       x = "Time",
+       y = "Proportion")
+
+
+
+# CONCURRENT TIES
+
+data.frame(y = sim_list[[1]]$stats$nwstats[[1]][, "concurrent"]) %>%
+  mutate(x = 1:n()) %>%
+  ggplot(aes(x = x,
+             y = y)) +
+  geom_line() +
+  theme_classic() +
+  geom_hline(yintercept = 118.0182859, linetype = "dotted") +
+  geom_hline(yintercept = 28.29061478) +
+  geom_hline(yintercept = 6.741955174, linetype = "dotted") +
+  labs(title = "Number of Concurrent Partnerships (Main)",
+       x = "Time",
+       y = NULL)
+
+data.frame(y = sim_list[[1]]$stats$nwstats[[2]][, "concurrent"]) %>%
+  mutate(x = 1:n()) %>%
+  ggplot(aes(x = x,
+             y = y)) +
+  geom_line() +
+  theme_classic() +
+  geom_hline(yintercept = 1055.447181, linetype = "dotted") +
+  geom_hline(yintercept = 735.5733031) +
+  geom_hline(yintercept = 508.0176154, linetype = "dotted") +
+  labs(title = "Number of Concurrent Partnerships (Casual)",
+       x = "Time",
+       y = NULL)
+
+
+
+# NUMBER OF EDGES (AGE GROUP)
+### Main
+data.frame(under21 = sim_list[[1]]$epi$n_edges_main.under21,
+           over21 = sim_list[[1]]$epi$n_edges_main.over21,
+           # diffage = sim_list[[1]]$epi$n_edges_main.diffage,
+           sameage = sim_list[[1]]$epi$n_edges_main.sameage) %>%
+  mutate(x = 1:n()) %>%
+  tidyr::pivot_longer(cols = under21:sameage) %>%
+  ggplot(aes(x = x,
+             y = value,
+             color = name)) +
+  geom_line() +
+  theme_classic() +
+  # Over 21 limits
+  geom_hline(yintercept = 997.555715, linetype = "dotted", color = scales::hue_pal()(3)[[1]]) +
+  geom_hline(yintercept = 763.2791946, color = scales::hue_pal()(3)[[1]]) +
+  geom_hline(yintercept = 538.9211228, linetype = "dotted", color = scales::hue_pal()(3)[[1]]) +
+  # Same age group limits
+  geom_hline(yintercept = 1345.816152, linetype = "dotted", color = scales::hue_pal()(3)[[2]]) +
+  geom_hline(yintercept = 979.2628343, color = scales::hue_pal()(3)[[2]]) +
+  geom_hline(yintercept = 649.7071525, linetype = "dotted", color = scales::hue_pal()(3)[[2]]) +
+  # Under 21 limits
+  geom_hline(yintercept = 348.2604366, linetype = "dotted", color = scales::hue_pal()(3)[[3]]) +
+  geom_hline(yintercept = 215.9836397, color = scales::hue_pal()(3)[[3]]) +
+  geom_hline(yintercept = 110.7860297, linetype = "dotted", color = scales::hue_pal()(3)[[3]]) +
+  labs(title = "Number of Main Partnerships by Age Group Composition",
+       x = "Time",
+       y = "Number of Edges")
+
+### Casual
+data.frame(under21 = sim_list[[1]]$epi$n_edges_casual.under21,
+           over21 = sim_list[[1]]$epi$n_edges_casual.over21,
+           # diffage = sim_list[[1]]$epi$n_edges_casual.diffage,
+           sameage = sim_list[[1]]$epi$n_edges_casual.sameage) %>%
+  mutate(x = 1:n()) %>%
+  tidyr::pivot_longer(cols = under21:sameage) %>%
+  ggplot(aes(x = x,
+             y = value,
+             color = name)) +
+  geom_line() +
+  theme_classic() +
+  # Over 21 limits
+  geom_hline(yintercept = 1391.18333, linetype = "dotted", color = scales::hue_pal()(3)[[1]]) +
+  geom_hline(yintercept = 1036.860988, color = scales::hue_pal()(3)[[1]]) +
+  geom_hline(yintercept = 694.8788677, linetype = "dotted", color = scales::hue_pal()(3)[[1]]) +
+  # Same age group limits
+  geom_hline(yintercept = 1959.644774, linetype = "dotted", color = scales::hue_pal()(3)[[2]]) +
+  geom_hline(yintercept = 1383.753222, color = scales::hue_pal()(3)[[2]]) +
+  geom_hline(yintercept = 878.2011497, linetype = "dotted", color = scales::hue_pal()(3)[[2]]) +
+  # Under 21 limits
+  geom_hline(yintercept = 568.4614443, linetype = "dotted", color = scales::hue_pal()(3)[[3]]) +
+  geom_hline(yintercept = 346.8922334, color = scales::hue_pal()(3)[[3]]) +
+  geom_hline(yintercept = 183.322282, linetype = "dotted", color = scales::hue_pal()(3)[[3]]) +
+  labs(title = "Number of Casual Partnerships by Age Group Composition",
+       x = "Time",
+       y = "Number of Edges")
+
+
+data.frame(under21 = sim_list[[1]]$epi$n_edges_onetime.under21,
+           over21 = sim_list[[1]]$epi$n_edges_onetime.over21,
+           # diffage = sim_list[[1]]$epi$n_edges_onetime.diffage,
+           sameage = sim_list[[1]]$epi$n_edges_onetime.sameage) %>%
+  mutate(x = 1:n()) %>%
+  tidyr::pivot_longer(cols = under21:sameage) %>%
+  ggplot(aes(x = x,
+             y = value,
+             color = name)) +
+  geom_line() +
+  theme_classic() +
+  # Over 21 limits
+  geom_hline(yintercept = 54.46798642, linetype = "dotted", color = scales::hue_pal()(3)[[1]]) +
+  geom_hline(yintercept = 38.61964212, color = scales::hue_pal()(3)[[1]]) +
+  geom_hline(yintercept = 22.91260422, linetype = "dotted", color = scales::hue_pal()(3)[[1]]) +
+  # Same age group limits
+  geom_hline(yintercept = 82.68117582, linetype = "dotted", color = scales::hue_pal()(3)[[2]]) +
+  geom_hline(yintercept = 56.19889793, color = scales::hue_pal()(3)[[2]]) +
+  geom_hline(yintercept = 32.46456615, linetype = "dotted", color = scales::hue_pal()(3)[[2]]) +
+  # Under 21 limits
+  geom_hline(yintercept = 28.2131894, linetype = "dotted", color = scales::hue_pal()(3)[[3]]) +
+  geom_hline(yintercept = 17.57925581, color = scales::hue_pal()(3)[[3]]) +
+  geom_hline(yintercept = 9.551961931, linetype = "dotted", color = scales::hue_pal()(3)[[3]]) +
+  labs(title = "Number of One-Time Partnerships by Age Group Composition",
+       x = "Time",
+       y = "Number of Edges")
+
+
+
+# T1 Edgelist for István
+sim_list[[1]]$raw.records[[1]]
+
+
+plot(sim_list[[1]]$epi$n_edges_casual, main = "Casual Partnerships")
+plot(sim_list[[1]]$epi$n_edges_onetime)
+
+plot(sim_list[[1]]$epi$num.B)
+plot(sim_list[[1]]$epi$num.mainzero)
+plot(sim_list[[1]]$epi$num.main1plus)
+
+plot(sim_list[[1]]$epi$num.caslzero)
+plot(sim_list[[1]]$epi$num.casl1)
+plot(sim_list[[1]]$epi$num.casl2plus)
+
+plot(sim_list[[1]]$epi$num.16to20)
+plot(sim_list[[1]]$epi$num.21plus)
+
+
+
+plot(sim_list[[1]]$epi$n_edges_main.under21, main = "Main Partnerships, Both Under 21")
+plot(sim_list[[1]]$epi$n_edges_main.over21, main = "Main Partnerships, Both Over 21")
+plot(sim_list[[1]]$epi$n_edges_main.diffage, main = "Main Partnerships, Cross-Age Group")
+
+
+plot(
+     sim_list[[1]]$epi$num.W,
+  sim_list[[1]]$epi$n_edges_main,
+     main = "Main Partnerships")
+
 # Combine pertinent elements of `sim_list` to a single data frame
-full_data <- dplyr::bind_rows(lapply(sim_list[[1]]$raw.records, function(x){x$object}))
+epi_wrangle <- function(x) {
+  this_epi <- dplyr::bind_rows(x$epi)
+  this_epi$time = 1:nrow(this_epi)
+  return(this_epi)
+}
+
+el_wrangle <- function(x) {
+  this_epi <- dplyr::bind_rows(x$object)
+  # this_epi$time = 1:nrow(this_epi)
+  return(this_epi)
+}
+
+full_data <- dplyr::bind_rows(lapply(sim_list, epi_wrangle))
+full_el <- dplyr::bind_rows(lapply(sim_list[[1]]$raw.records, el_wrangle))
+full_data$sim <- rep(1:20, each = 3640)
+
+library(tidyverse)
+
+target_plot(full_data, var = "num", group = "sim", benchmark = 11612)
+
+target_plot(full_data, var = "num.16to20", group = "sim", benchmark = 3125)
+target_plot(full_data, var = "num.21plus", group = "sim", benchmark = 8487)
+
+target_plot(full_data, var = "n_edges_main", group = "sim")
+target_plot(full_data, var = "n_edges_casual", group = "sim")
+
+i = 1
+target_plot(full_data, var = "num.mainzero", group = "sim",
+            title = paste("Plot ", i, ": Number of Nodes with 0 Ties (Main Partnerships)", sep = ""))
+i = 1 + i
+target_plot(full_data, var = "num.main1plus", group = "sim",
+            title = paste("Plot ", i, ": Number of Nodes with 1+ Ties (Main Partnerships)", sep = ""))
+i = 1 + i
+target_plot(full_data, var = "num.caslzero", group = "sim",
+            title = paste("Plot ", i, ": Number of Nodes with 0 Ties (Casual Partnerships)", sep = ""))
+i = 1 + i
+target_plot(full_data, var = "num.casl1", group = "sim",
+            title = paste("Plot ", i, ": Number of Nodes with 1 Tie (Casual Partnerships)", sep = ""))
+i = 1 + i
+target_plot(full_data, var = "num.casl2plus", group = "sim",
+            title = paste("Plot ", i, ": Number of Nodes with 2+ Ties (Casual Partnerships)", sep = ""))
+i = 1 + i
+target_plot(full_data, var = "num.totzero", group = "sim",
+            title = paste("Plot ", i, ": Number of Nodes with 0 Ties (All Partnerships)", sep = ""))
+i = 1 + i
+target_plot(full_data, var = "num.tot1", group = "sim",
+            title = paste("Plot ", i, ": Number of Nodes with 1 Tie (All Partnerships)", sep = ""))
+i = 1 + i
+target_plot(full_data, var = "num.tot2", group = "sim",
+            title = paste("Plot ", i, ": Number of Nodes with 2 Ties (All Partnerships)", sep = ""))
+i = 1 + i
+target_plot(full_data, var = "num.tot3plus", group = "sim",
+title = paste("Plot ", i, ": Number of Nodes with 3+ Ties (All Partnerships)", sep = ""))
+
+
+
+# full_data <- dplyr::bind_rows(lapply(sim_list, function(x){x$epi}))
+
+
 
 # Create a separate object containing just the infection acts
 inf_events <- full_data %>% dplyr::filter(type == 4) %>%

@@ -197,7 +197,7 @@ library(tidyverse)
 i = 1
 
 target_plot(data = sim_targets,
-            group = "sim",
+            group = "treat",
             var = "num",
             benchmark = 11612,
             title = paste("Plot ", i, ": Population Size", sep = ""))
@@ -208,7 +208,7 @@ target_plot(data = sim_targets,
 i <- i+1
 
 target_plot(data = sim_targets,
-            group = "sim",
+            group = "treat",
             var = "cc.dx",
             benchmark = 0.55333,
             title = paste("Plot ", i, ": Proportion of HIV+ that are Diagnosed", sep = ""))
@@ -216,7 +216,7 @@ target_plot(data = sim_targets,
 i <- i+1
 
 target_plot(data = sim_targets,
-            group = "sim",
+            group = "treat",
             var = "cc.dx.B",
             benchmark = 0.546535643,
             title = paste("Plot ", i, ": Proportion of HIV+ that are Diagnosed (Black)", sep = ""))
@@ -225,7 +225,7 @@ target_plot(data = sim_targets,
 i <- i+1
 
 target_plot(data = sim_targets,
-            group = "sim",
+            group = "treat",
             var = "cc.dx.H",
             benchmark = 0.5431367893,
             title = paste("Plot ", i, ": Proportion of HIV+ that are Diagnosed (Hispanic)", sep = ""))
@@ -233,7 +233,7 @@ target_plot(data = sim_targets,
 i <- i+1
 
 target_plot(data = sim_targets,
-            group = "sim",
+            group = "treat",
             var = "cc.dx.O",
             benchmark = 0.5601310,
             title = paste("Plot ", i, ": Proportion of HIV+ that are Diagnosed (Other)", sep = ""))
@@ -241,7 +241,7 @@ target_plot(data = sim_targets,
 i <- i+1
 
 target_plot(data = sim_targets,
-            group = "sim",
+            group = "treat",
             var = "cc.dx.W",
             benchmark = 0.5988779867,
             title = paste("Plot ", i, ": Proportion of HIV+ that are Diagnosed (White)", sep = ""))
@@ -253,7 +253,7 @@ target_plot(data = sim_targets,
 i <- i+1
 
 target_plot(data = sim_targets,
-            group = "sim",
+            group = "treat",
             var = "cc.linked1m.B",
             benchmark = .828,
             title = paste("Plot ", i, ": Proportion of HIV+ Nodes Linked to Care within One Month (Black)", sep = ""))
@@ -262,7 +262,7 @@ target_plot(data = sim_targets,
 i <- i+1
 
 target_plot(data = sim_targets,
-            group = "sim",
+            group = "treat",
             var = "cc.linked1m.H",
             benchmark = 0.867,
             title = paste("Plot ", i, ": Proportion of HIV+ Nodes Linked to Care within One Month (Hispanic)", sep = ""))
@@ -270,7 +270,7 @@ target_plot(data = sim_targets,
 i <- i+1
 
 target_plot(data = sim_targets,
-            group = "sim",
+            group = "treat",
             var = "cc.linked1m.O",
             benchmark = 0.875,
             title = paste("Plot ", i, ": Proportion of HIV+ Nodes Linked to Care within One Month (Other)", sep = ""))
@@ -278,7 +278,7 @@ target_plot(data = sim_targets,
 i <- i+1
 
 target_plot(data = sim_targets,
-            group = "sim",
+            group = "treat",
             var = "cc.linked1m.W",
             benchmark = 0.936,
             title = paste("Plot ", i, ": Proportion of HIV+ Nodes Linked to Care within One Month (White)", sep = ""))
@@ -290,7 +290,7 @@ target_plot(data = sim_targets,
 i <- i+1
 
 target_plot(data = sim_targets,
-            group = "sim",
+            group = "treat",
             var = "cc.vsupp.B",
             benchmark = 0.571,
             title = paste("Plot ", i, ": Proportion of HIV+ Nodes with Viral Suppression (Black)", sep = ""))
@@ -299,7 +299,7 @@ target_plot(data = sim_targets,
 i <- i+1
 
 target_plot(data = sim_targets,
-            group = "sim",
+            group = "treat",
             var = "cc.vsupp.H",
             benchmark = 0.675,
             title = paste("Plot ", i, ": Proportion of HIV+ Nodes with Viral Suppression (Hispanic)", sep = ""))
@@ -307,7 +307,7 @@ target_plot(data = sim_targets,
 i <- i+1
 
 target_plot(data = sim_targets,
-            group = "sim",
+            group = "treat",
             var = "cc.vsupp.O",
             benchmark = 0.586,
             title = paste("Plot ", i, ": Proportion of HIV+ Nodes with Viral Suppression (Other)", sep = ""))
@@ -315,7 +315,7 @@ target_plot(data = sim_targets,
 i <- i+1
 
 target_plot(data = sim_targets,
-            group = "sim",
+            group = "treat",
             var = "cc.vsupp.W",
             benchmark = 0.617,
             title = paste("Plot ", i, ": Proportion of HIV+ Nodes with Viral Suppression (White)", sep = ""))
@@ -326,7 +326,7 @@ target_plot(data = sim_targets,
 i <- i+1
 
 target_plot(data = sim_targets,
-            group = "sim",
+            group = "treat",
             var = "cc.prep.B",
             benchmark = 0.350,
             title = paste("Plot ", i, ": Proportion of Indicated MSM currently using PrEP (Black)", sep = ""))
@@ -334,7 +334,7 @@ target_plot(data = sim_targets,
 i <- i+1
 
 target_plot(data = sim_targets,
-            group = "sim",
+            group = "treat",
             var = "cc.prep.H",
             benchmark = 0.386,
             title = paste("Plot ", i, ": Proportion of Indicated MSM currently using PrEP (Hispanic)", sep = ""))
@@ -342,7 +342,7 @@ target_plot(data = sim_targets,
 i <- i+1
 
 target_plot(data = sim_targets,
-            group = "sim",
+            group = "treat",
             var = "cc.prep.O",
             benchmark = 0.357,
             title = paste("Plot ", i, ": Proportion of Indicated MSM currently using PrEP (Other)", sep = ""))
@@ -350,7 +350,7 @@ target_plot(data = sim_targets,
 i <- i+1
 
 target_plot(data = sim_targets,
-            group = "sim",
+            group = "treat",
             var = "cc.prep.W",
             benchmark = 0.368,
             title = paste("Plot ", i, ": Proportion of Indicated MSM currently using PrEP (White)", sep = ""))
@@ -386,25 +386,25 @@ target_plot(data = sim_targets,
 i <- i+1
 target_plot(data = sim_targets,
             var = "exo.ir100.B",
-            group = "sim",
+            group = "treat",
             benchmark = mean(c(1.438, 1.798)),
             title = paste("Plot ", i, ": Exogenous Incidence Rate (Black)", sep = ""))
 i <- i+1
 target_plot(data = sim_targets,
             var = "exo.ir100.H",
-            group = "sim",
+            group = "treat",
             benchmark = mean(c(0.653, 0.816)),
             title = paste("Plot ", i, ": Exogenous Incidence Rate (Hispanic)", sep = ""))
 i <- i+1
 target_plot(data = sim_targets,
             var = "exo.incid.O",
-            group = "sim",
+            group = "treat",
             benchmark = mean(c(0.506, 0.633)),
             title = paste("Plot ", i, ": Exogenous Incidence Rate (Other)", sep = ""))
 i <- i+1
 target_plot(data = sim_targets,
             var = "exo.incid.W",
-            group = "sim",
+            group = "treat",
             benchmark = mean(c(0.257, 0.3212)),
             title = paste("Plot ", i, ": Exogenous Incidence Rate (White)", sep = ""))
 
@@ -412,7 +412,7 @@ target_plot(data = sim_targets,
 i <- i+1
 target_plot(data = annual_incid2,
             var = "exo.ir100.B",
-            group = "sim",
+            group = "treat",
             benchmark = mean(c(1.438, 1.798)),
             target_range = c(1.438, 1.798),
             title = paste("Plot ", i, ": Exogenous Incidence Rate (Black, Annualized)", sep = ""))
@@ -420,21 +420,21 @@ target_plot(data = annual_incid2,
 i <- i+1
 target_plot(data = annual_incid2,
             var = "exo.ir100.H",
-            group = "sim",
+            group = "treat",
             benchmark = mean(c(0.653, 0.816)),
             target_range = c(0.653, 0.816),
             title = paste("Plot ", i, ": Exogenous Incidence Rate (Hispanic, Annualized)", sep = ""))
 i <- i+1
 target_plot(data = annual_incid2,
             var = "exo.ir100.O",
-            group = "sim",
+            group = "treat",
             benchmark = mean(c(0.506, 0.633)),
             target_range = c(0.506, 0.633),
             title = paste("Plot ", i, ": Exogenous Incidence Rate (Other, Annualized)", sep = ""))
 i <- i+1
 target_plot(data = annual_incid2,
             var = "exo.ir100.W",
-            group = "sim",
+            group = "treat",
             benchmark = mean(c(0.257, 0.3212)),
             target_range = c(0.257, 0.3212),
             title = paste("Plot ", i, ": Exogenous Incidence Rate (White, Annualized)", sep = ""))
@@ -470,25 +470,25 @@ target_plot(data = annual_incid2,
 i <- i+1
 target_plot(data = sim_targets,
             var = "endo.ir100.B",
-            group = "sim",
+            group = "treat",
             benchmark = 6.42 - mean(c(1.438, 1.798)),
             title = paste("Plot ", i, ": Endogenous Incidence Rate (Black)", sep = ""))
 i <- i+1
 target_plot(data = sim_targets,
             var = "endo.ir100.H",
-            group = "sim",
+            group = "treat",
             benchmark = 2.04 - mean(c(0.653, 0.816)),
             title = paste("Plot ", i, ": Endogenous Incidence Rate (Hispanic)", sep = ""))
 i <- i+1
 target_plot(data = sim_targets,
             var = "endo.ir100.O",
-            group = "sim",
+            group = "treat",
             benchmark = 1.71 - mean(c(0.506, 0.633)),
             title = paste("Plot ", i, ": Endogenous Incidence Rate (Other)", sep = ""))
 i <- i+1
 target_plot(data = sim_targets,
             var = "endo.ir100.W",
-            group = "sim",
+            group = "treat",
             benchmark = 0.73 - mean(c(0.257, 0.3212)),
             title = paste("Plot ", i, ": Endogenous Incidence Rate (White)", sep = ""))
 
@@ -496,28 +496,28 @@ target_plot(data = sim_targets,
 i <- i+1
 target_plot(data = annual_incid2,
             var = "endo.ir100.B",
-            group = "sim",
+            group = "treat",
             benchmark = 6.42 - mean(c(1.438, 1.798)),
             target_range = c(4.44-1.438, 9.30-1.798),
             title = paste("Plot ", i, ": Endogenous Incidence Rate (Black, Annualized)", sep = ""))
 i <- i+1
 target_plot(data = annual_incid2,
             var = "endo.ir100.H",
-            group = "sim",
+            group = "treat",
             benchmark = 2.04 - mean(c(0.653, 0.816)),
             target_range = c(1.10-0.653, 3.79-0.816),
             title = paste("Plot ", i, ": Endogenous Incidence Rate (Hispanic, Annualized)", sep = ""))
 i <- i+1
 target_plot(data = annual_incid2,
             var = "endo.ir100.O",
-            group = "sim",
+            group = "treat",
             benchmark = 1.71 - mean(c(0.506, 0.633)),
             target_range = c(0.55-0.506, 5.31-0.633),
             title = paste("Plot ", i, ": Endogenous Incidence Rate (Other, Annualized)", sep = ""))
 i <- i+1
 target_plot(data = annual_incid2,
             var = "endo.ir100.W",
-            group = "sim",
+            group = "treat",
             benchmark = 0.73 - mean(c(0.257, 0.3212)),
             target_range = c(0.24, 2.26-0.3212),
             title = paste("Plot ", i, ": Endogenous Incidence Rate (White, Annualized)", sep = ""))
@@ -527,26 +527,26 @@ target_plot(data = annual_incid2,
 i <- i+1
 target_plot(data = sim_targets,
             var = "ir100.B",
-            group = "sim",
+            group = "treat",
             benchmark = mean(6.42),
             title = paste("Plot ", i, ": Endogenous Incidence Rate (Black)", sep = ""))
 i <- i+1
 target_plot(data = sim_targets,
             var = "ir100.H",
-            group = "sim",
+            group = "treat",
             benchmark = mean(2.04),
             title = paste("Plot ", i, ": Endogenous Incidence Rate (Hispanic)", sep = ""))
 i <- i+1
 target_plot(data = sim_targets,
             var = "ir100.O",
-            group = "sim",
+            group = "treat",
             benchmark = mean(1.71),
             title = paste("Plot ", i, ": Endogenous Incidence Rate (Other)", sep = ""))
 
 i <- i+1
 target_plot(data = sim_targets,
             var = "ir100.W",
-            group = "sim",
+            group = "treat",
             benchmark = mean(0.73),
             title = paste("Plot ", i, ": Endogenous Incidence Rate (White)", sep = ""))
 
@@ -554,7 +554,7 @@ target_plot(data = sim_targets,
 i <- i+1
 target_plot(data = annual_incid2,
             var = "ir100.B",
-            group = "sim",
+            group = "treat",
             benchmark = 6.42,
             target_range = c(4.44, 9.30),
             title = paste("Plot ", i, ": Total Incidence Rate (Black, Annualized)", sep = ""))
@@ -568,14 +568,14 @@ target_plot(data = annual_incid2,
 i <- i+1
 target_plot(data = annual_incid2,
             var = "ir100.O",
-            group = "sim",
+            group = "treat",
             benchmark = 1.71,
             target_range = c(0.55, 5.31),
             title = paste("Plot ", i, ": Total Incidence Rate (Other, Annualized)", sep = ""))
 i <- i+1
 target_plot(data = annual_incid2,
             var = "ir100.W",
-            group = "sim",
+            group = "treat",
             benchmark = 0.73,
             target_range = c(0.24, 2.26),
             title = paste("Plot ", i, ": Total Incidence Rate (White, Annualized)", sep = ""))
@@ -590,7 +590,7 @@ se_prop <- function(p, n) {
 i <- i+1
 target_plot(data = sim_targets,
             var = "i.prev",
-            group = "sim",
+            group = "treat",
             benchmark = 0.165,
             target_range = se_prop(.165, 1015),
             title = paste("Plot ", i, ": Prevalence, Infected", sep = ""))
@@ -598,7 +598,7 @@ target_plot(data = sim_targets,
 i <- i+1
 target_plot(data = sim_targets,
             var = "i.prev.B",
-            group = "sim",
+            group = "treat",
             benchmark = 0.32,
             target_range = se_prop(.32, 244),
             title = paste("Plot ", i, ": Prevalence, Infected (Black)", sep = ""))
@@ -606,7 +606,7 @@ target_plot(data = sim_targets,
 i <- i+1
 target_plot(data = sim_targets,
             var = "i.prev.H",
-            group = "sim",
+            group = "treat",
             benchmark = 0.125,
             target_range = se_prop(.125, 304),
             title = paste("Plot ", i, ": Prevalence, Infected (Hispanic)", sep = ""))
@@ -614,7 +614,7 @@ target_plot(data = sim_targets,
 i <- i+1
 target_plot(data = sim_targets,
             var = "i.prev.O",
-            group = "sim",
+            group = "treat",
             benchmark = 0.122,
             target_range = se_prop(.122, 115),
             title = paste("Plot ", i, ": Prevalence, Infected (Other)", sep = ""))
@@ -622,7 +622,7 @@ target_plot(data = sim_targets,
 i <- i+1
 target_plot(data = sim_targets,
             var = "i.prev.W",
-            group = "sim",
+            group = "treat",
             benchmark = .02,
             target_range = se_prop(.02, 252),
             title = paste("Plot ", i, ": Prevalence, Infected (White)", sep = ""))

@@ -1,0 +1,1053 @@
+---
+title: "chistig_diagnostics"
+output: pdf_document
+date: "2023-10-26"
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r, echo = FALSE, warning=FALSE, message = FALSE}
+source("~/Desktop/chiSTIG_hpc/R/hpc_data_processing.R")
+
+# Libraries --------------------------------------------------------------------
+# library("tidyverse")
+# library("future.apply")
+# library("EpiModelHIV")
+# 
+# source("./R/utils-targets.R")
+# 
+# this_dir <- "~/Desktop/20mar_test/19mar_20runs/"
+# 
+# # Data ------------------------------------------------------------------------
+# # mich_va_files <- list.files("./data/intermediate")[stringr::str_detect(list.files("./data/intermediate"), "^mich_va")]
+# mich_va_files <- list.files(this_dir)[stringr::str_detect(list.files(this_dir), ".rds$")]
+# 
+# for (i in 1:length(mich_va_files)) {
+#   this <- tibble::as.tibble(readRDS(paste(this_dir, mich_va_files[[i]], sep = ""))) %>%
+#     mutate_calibration_targets() %>%
+#     mutate(i.prev.disp.BW = i.prev.B - i.prev.W,
+#            i.prev.disp.HW = i.prev.H - i.prev.W,
+#          # Number of negative nodes (for annualized incidence rates)
+#          num_negative = (num-(i.prev*num)),
+#          num_negative.B = (num.B-(i.prev.B*num.B)),
+#          num_negative.H = (num.H-(i.prev.H*num.H)),
+#          num_negative.O = (num.O-(i.prev.O*num.O)),
+#          num_negative.W = (num.W-(i.prev.W*num.W)),
+#          # Total Incidence
+#          total.incid = incid + exo.incid,
+#          total.incid.B = incid.B + exo.incid.B,
+#          total.incid.H = incid.H + exo.incid.H,
+#          total.incid.O = incid.O + exo.incid.O,
+#          total.incid.W = incid.W + exo.incid.W,
+#          treat = case_when(str_detect(mich_va_files[[i]], "^control") ~ "Control Model",
+#                            str_detect(mich_va_files[[i]], "^venues") ~ "Venues Only",
+#                            str_detect(mich_va_files[[i]], "^apps") ~ "Apps Only",
+#                            str_detect(mich_va_files[[i]], "^both") ~ "Full Model",
+#                            TRUE ~ NA),
+#          sim = i)
+#     
+#   if (i == 1) {
+#     sim_targets <- this
+#   } else {
+#     sim_targets <- dplyr::bind_rows(sim_targets, this)
+#   }
+#   
+# }
+
+# sim_targets <- readRDS("./data/intermediate/alldata_oct31.rds")
+# # Measure Racial Disparity
+# sim_targets <- sim_targets %>%
+#   mutate(i.prev.disp.BW = i.prev.B - i.prev.W,
+#          i.prev.disp.HW = i.prev.H - i.prev.W,
+#          # Number of negative nodes (for annualized incidence rates)
+#          num_negative = (num-(i.prev*num)),
+#          num_negative.B = (num.B-(i.prev.B*num.B)),
+#          num_negative.H = (num.H-(i.prev.H*num.H)),
+#          num_negative.O = (num.O-(i.prev.O*num.O)),
+#          num_negative.W = (num.W-(i.prev.W*num.W)),
+#          # Total Incidence
+#          total.incid = incid + exo.incid,
+#          total.incid.B = incid.B + exo.incid.B,
+#          total.incid.H = incid.H + exo.incid.H,
+#          total.incid.O = incid.O + exo.incid.O,
+#          total.incid.W = incid.W + exo.incid.W)
+# # Let's make our treatment variable an ordered factor for plotting
+# # sim_targets$treat <- factor(sim_targets$treat, levels=c("Control Model", "Venues Only", "Apps Only", "Venues and Apps"), ordered=TRUE)    
+# 
+# 
+# netstats <- readRDS("~/Desktop/ChiSTIG_model/epimodel/data/intermediate/estimates/netstats-novenues-local.rds")
+
+# Custom function for generating summary plots ---------------------------------
+target_plot <- function(data, group, var, benchmark = NULL, title = NULL,
+                        target_range = NULL) {
+
+  # Create placeholder of variable we need
+  data2 <- data[, c("time", group, var)]
+  colnames(data2) <- c("time", "venues_treat", "this_var")
+
+  if (is.null(target_range)) {
+
+        this_plot <- data2 %>%
+          group_by(venues_treat, time) %>%
+          summarize(quantile_25 = quantile(this_var, 1/4, na.rm = T),
+                    quantile_75 = quantile(this_var, 3/4, na.rm = T),
+                    this_var = median(this_var)) %>%
+          dplyr::ungroup() %>%
+          ggplot(aes(x = time, y = this_var, color = as.factor(venues_treat))) +
+          geom_smooth() +
+          geom_errorbar(aes(ymin = quantile_25,
+                            ymax = quantile_75),
+                        alpha = 0.05) +
+          theme_minimal() +
+          labs(y = var)
+
+  } else {
+        this_plot <- data2 %>%
+          group_by(venues_treat, time) %>%
+          summarize(this_var = median(this_var)) %>%
+          dplyr::ungroup() %>%
+          ggplot(aes(x = time, y = this_var, color = as.factor(venues_treat))) +
+          geom_ribbon(aes(x = time, ymin = sort(target_range)[[1]], ymax = sort(target_range)[[2]]), fill = "grey", alpha = 0.15, linetype = 0) +
+          geom_line() +
+          theme_minimal() +
+          labs(y = var)
+  }
+
+  if (!is.null(benchmark)) {
+    this_plot <- this_plot +
+      geom_hline(aes(yintercept = benchmark), color = "red")
+  }
+
+  if (!is.null(title)) {
+    this_plot <- this_plot +
+      ggtitle(title)
+  }
+
+  return(this_plot)
+}
+
+
+target_plot2 <- function(data, group, var_prefix, benchmark = NULL, 
+                         title = NULL, num_col = 2, mct = "mean") {
+  
+  data2 <- data[, c(which(names(data) == "time"),
+                    which(names(data) == group),
+                    which(stringr::str_detect(names(data), paste("^", var_prefix, sep = ""))))]
+  colnames(data2)[1] <- "time"
+  colnames(data2)[2] <- "group"
+
+  
+  if (ncol(data2) > 7) {
+    data2 <- data2[,1:7]
+  }
+  
+  if (mct == "mean") {
+        this_plot <- data2 %>% 
+        group_by(group, time) %>%
+        summarise_all(mean) %>%
+        pivot_longer(cols = starts_with(var_prefix), 
+                     names_to = "Race", values_to = "Val") %>%
+        mutate(Race2 = case_when(str_detect(Race, ".W$") ~ "White",
+                                 str_detect(Race, ".B$") ~ "Black",
+                                 str_detect(Race, ".O$") ~ "Other",
+                                 str_detect(Race, ".H$") ~ "Hispanic",
+                                TRUE ~ "Total")) %>%
+        mutate(Race2 = case_when(str_detect(Race, ".BH$") ~ "Black/Hispanic",
+                                 str_detect(Race, ".BO$") ~ "Black/Other",
+                                 str_detect(Race, ".BW$") ~ "Black/White",
+                                 str_detect(Race, ".HO$") ~ "Hispanic/Other",
+                                 str_detect(Race, ".HW$") ~ "Hispanic/White",
+                                 str_detect(Race, ".OW$") ~ "Other/White",
+                                TRUE ~ Race2)) %>%
+        mutate(Race = Race2) %>%
+        ggplot(aes(x = time, y = Val, color = Race, fill = Race)) +
+            geom_smooth() +
+          theme_minimal() +
+          labs(y = var_prefix) +
+        facet_wrap(~group, ncol = num_col)
+  } else {
+      this_plot <- data2 %>% 
+        group_by(group, time) %>%
+        summarise_all(median) %>%
+        pivot_longer(cols = starts_with(var_prefix), 
+                     names_to = "Race", values_to = "Val") %>%
+        mutate(Race2 = case_when(str_detect(Race, ".W$") ~ "White",
+                                 str_detect(Race, ".B$") ~ "Black",
+                                 str_detect(Race, ".O$") ~ "Other",
+                                 str_detect(Race, ".H$") ~ "Hispanic",
+                                TRUE ~ "Total")) %>%
+        mutate(Race2 = case_when(str_detect(Race, ".BH$") ~ "Black/Hispanic",
+                                 str_detect(Race, ".BO$") ~ "Black/Other",
+                                 str_detect(Race, ".BW$") ~ "Black/White",
+                                 str_detect(Race, ".HO$") ~ "Hispanic/Other",
+                                 str_detect(Race, ".HW$") ~ "Hispanic/White",
+                                 str_detect(Race, ".OW$") ~ "Other/White",
+                                TRUE ~ Race2)) %>%
+        mutate(Race = Race2) %>%
+        ggplot(aes(x = time, y = Val, color = Race, fill = Race)) +
+            geom_smooth() +
+          theme_minimal() +
+          labs(y = var_prefix) +
+        facet_wrap(~group, ncol = num_col)
+  } 
+  
+  
+  if (!is.null(benchmark)) {
+    this_plot <- this_plot +
+      geom_hline(aes(yintercept = benchmark), color = "red")
+  }
+
+  if (!is.null(title)) {
+    this_plot <- this_plot +
+      ggtitle(title)
+  }
+
+  return(this_plot)
+ 
+}
+
+# Annualized Incidence Counts --------------------------------------------------
+# 
+# mean_incid <-  sim_targets %>%
+#   # mutate(sim = treat) %>%
+#   mutate(total.incid.B = incid.B + exo.incid.B,
+#          total.incid.H = incid.H + exo.incid.H,
+#          total.incid.O = incid.O + exo.incid.O,
+#          total.incid.W = incid.W + exo.incid.W) %>%
+#   group_by(treat, time) %>%
+#   # group_by(sim, time) %>%
+#   summarize(incid.B = mean(incid.B),
+#             exo.incid.B = mean(exo.incid.B),
+#             total.incid.B = mean(total.incid.B),
+#             endo.ir100.B = mean(endo.ir100.B),
+#             exo.ir100.B = mean(exo.ir100.B),
+#             ir100.B = mean(ir100.B),
+# 
+#             incid.H = mean(incid.H),
+#             exo.incid.H = mean(exo.incid.H),
+#             total.incid.H = mean(total.incid.H),
+#             endo.ir100.H = mean(endo.ir100.H),
+#             exo.ir100.H = mean(exo.ir100.H),
+#             ir100.H = mean(ir100.H),
+# 
+#             incid.O = mean(incid.O),
+#             exo.incid.O = mean(exo.incid.O),
+#             total.incid.O = mean(total.incid.O),
+#             endo.ir100.O = mean(endo.ir100.O),
+#             exo.ir100.O = mean(exo.ir100.O),
+#             ir100.O = mean(ir100.O),
+# 
+#             incid.W = mean(incid.W),
+#             exo.incid.W = mean(exo.incid.W),
+#             total.incid.W = mean(total.incid.W),
+#             endo.ir100.W = mean(endo.ir100.W),
+#             exo.ir100.W = mean(exo.ir100.W),
+#             ir100.W = mean(ir100.W)
+# ) %>%
+#   ungroup()
+# 
+# 
+# for (j in 1:nrow(mean_incid)) {
+#   this_row <- mean_incid[j,]
+#   past_year <- mean_incid %>%
+#     filter(time <= this_row$time & time > (this_row$time-52)) %>%
+#     filter(treat == this_row$treat)
+#   sums <- as.data.frame(t(colSums(past_year[,3:ncol(past_year)])))
+#   sums$treat <- this_row$treat
+#   sums$time <- this_row$time
+# 
+#   if (j == 1) {
+#     annual_incid <- sums
+#   } else {
+#     annual_incid <- dplyr::bind_rows(annual_incid, sums)
+#   }
+# }
+# 
+# for (j in 1:nrow(mean_incid)) {
+#   this_row <- mean_incid[j,]
+#   past_year <- mean_incid %>%
+#     filter(time <= this_row$time & time > (this_row$time-52)) %>%
+#     filter(treat == this_row$treat)
+#   means <- as.data.frame(t(colMeans(past_year[,3:ncol(past_year)])))
+#   means$treat <- this_row$treat
+#   means$time <- this_row$time
+# 
+#   if (j == 1) {
+#     annual_incid2 <- means
+#   } else {
+#     annual_incid2 <- dplyr::bind_rows(annual_incid2, means)
+#   }
+# }
+# 
+# annual_incid2$total.incid.rate.dispar.BW <- annual_incid2$total.incid.B - annual_incid2$total.incid.W
+# annual_incid2$total.incid.rate.dispar.HW <- annual_incid2$total.incid.H - annual_incid2$total.incid.W
+# # Filter just the last ten years
+# sim_targets <- sim_targets %>%
+#   filter(time > (max(time) - 52*10)) %>%
+#   mutate(time = (time-min(time)+1))
+# annual_incid2 <- annual_incid2 %>%
+#   filter(time > (max(time) - 52*10)) %>%
+#   mutate(time = (time-min(time)+1))
+```
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE}
+
+# Population Size --------------------------------------------------------------
+i = 1
+
+target_plot(data = sim_targets,
+            group = "treat",
+            var = "num",
+            benchmark = 11612,
+            title = paste("Plot ", i, ": Population Size", sep = ""))
+
+i = 1
+target_plot(data = sim_targets,
+            group = "treat",
+            var = "n_edges_main",
+            # benchmark = basic$fit_main$target.stats[[1]],
+            title = paste("Plot ", i, ": Number of Main Partnerships", sep = ""))
+i = 2
+target_plot(data = sim_targets,
+            group = "treat",
+            var = "n_edges_casual",
+            # benchmark = basic$fit_casl$target.stats[[1]],
+            title = paste("Plot ", i, ": Number of Casual Partnerships", sep = ""))
+i = 3
+target_plot(data = sim_targets,
+            group = "treat",
+            var = "n_edges_onetime",
+           # benchmark = basic$fit_inst$target.stats[[1]],
+            title = paste("Plot ", i, ": Number of One-Time Partnerships", sep = ""))
+
+
+# Proportion Race
+target_plot(data = sim_targets,
+            group = "treat",
+            var = "num.B",
+           # benchmark = basic$fit_inst$target.stats[[1]],
+            title = paste("Plot ", i, ": Number of Nodes (Black)", sep = ""))
+
+target_plot(data = sim_targets,
+            group = "treat",
+            var = "num.H",
+           # benchmark = basic$fit_inst$target.stats[[1]],
+            title = paste("Plot ", i, ": Number of Nodes (Hispanic)", sep = ""))
+
+target_plot(data = sim_targets,
+            group = "treat",
+            var = "num.O",
+           # benchmark = basic$fit_inst$target.stats[[1]],
+            title = paste("Plot ", i, ": Number of Nodes (Other)", sep = ""))
+
+target_plot(data = sim_targets,
+            group = "treat",
+            var = "num.W",
+           # benchmark = basic$fit_inst$target.stats[[1]],
+            title = paste("Plot ", i, ": Number of Nodes (White)", sep = ""))
+
+
+
+# Proportion HIV+ Diagnosed ----------------------------------------------------
+
+# i <- i+1
+# 
+# target_plot(data = sim_targets,
+#             group = "treat",
+#             var = "cc.dx",
+#             benchmark = 0.814,
+#             title = paste("Plot ", i, ": Proportion of HIV+ that are Diagnosed", sep = ""))
+
+i <- i+1
+
+target_plot(data = sim_targets,
+            group = "treat",
+            var = "cc.dx.B",
+            benchmark = 0.546535643,
+            title = paste("Plot ", i, ": Proportion of HIV+ that are Diagnosed (Black)", sep = ""))
+
+
+i <- i+1
+
+target_plot(data = sim_targets,
+            group = "treat",
+            var = "cc.dx.H",
+            benchmark = 0.5431367893,
+            title = paste("Plot ", i, ": Proportion of HIV+ that are Diagnosed (Hispanic)", sep = ""))
+
+i <- i+1
+
+target_plot(data = sim_targets,
+            group = "treat",
+            var = "cc.dx.O",
+            benchmark = 0.5601310,
+            title = paste("Plot ", i, ": Proportion of HIV+ that are Diagnosed (Other)", sep = ""))
+
+i <- i+1
+
+target_plot(data = sim_targets,
+            group = "treat",
+            var = "cc.dx.W",
+            benchmark = 0.5988779867,
+            title = paste("Plot ", i, ": Proportion of HIV+ that are Diagnosed (White)", sep = ""))
+
+i <- i+1
+
+target_plot2(data = sim_targets,
+            group = "treat",
+            var_prefix = "cc.dx",
+            title = paste("Plot ", i, ": Proportion of HIV+ that are Diagnosed", sep = ""))
+
+
+# Proportion HIV+ Linked to Care in 1st Month ----------------------------------
+
+i <- i+1
+
+target_plot(data = sim_targets,
+            group = "treat",
+            var = "cc.linked1m.B",
+            benchmark = .828,
+            title = paste("Plot ", i, ": Proportion of HIV+ Nodes Linked to Care within One Month (Black)", sep = ""))
+
+
+
+
+i <- i+1
+
+target_plot(data = sim_targets,
+            group = "treat",
+            var = "cc.linked1m.H",
+            benchmark = 0.867,
+            title = paste("Plot ", i, ": Proportion of HIV+ Nodes Linked to Care within One Month (Hispanic)", sep = ""))
+
+i <- i+1
+
+target_plot(data = sim_targets,
+            group = "treat",
+            var = "cc.linked1m.O",
+            benchmark = 0.875,
+            title = paste("Plot ", i, ": Proportion of HIV+ Nodes Linked to Care within One Month (Other)", sep = ""))
+
+i <- i+1
+
+target_plot(data = sim_targets,
+            group = "treat",
+            var = "cc.linked1m.W",
+            benchmark = 0.936,
+            title = paste("Plot ", i, ": Proportion of HIV+ Nodes Linked to Care within One Month (White)", sep = ""))
+
+i <- i+1
+target_plot2(data = sim_targets,
+            group = "treat",
+            var_prefix = "cc.linked1m",
+            title = paste("Plot ", i, ": Proportion of HIV+ Nodes Linked to Care within One Month", sep = ""))
+
+# Proportion HIV+ With Viral Suppression ----------------------------------
+
+
+i <- i+1
+
+target_plot(data = sim_targets,
+            group = "treat",
+            var = "cc.vsupp.B",
+            benchmark = 0.571,
+            title = paste("Plot ", i, ": Proportion of HIV+ Nodes with Viral Suppression (Black)", sep = ""))
+
+
+i <- i+1
+
+target_plot(data = sim_targets,
+            group = "treat",
+            var = "cc.vsupp.H",
+            benchmark = 0.675,
+            title = paste("Plot ", i, ": Proportion of HIV+ Nodes with Viral Suppression (Hispanic)", sep = ""))
+
+i <- i+1
+
+target_plot(data = sim_targets,
+            group = "treat",
+            var = "cc.vsupp.O",
+            benchmark = 0.586,
+            title = paste("Plot ", i, ": Proportion of HIV+ Nodes with Viral Suppression (Other)", sep = ""))
+
+i <- i+1
+
+target_plot(data = sim_targets,
+            group = "treat",
+            var = "cc.vsupp.W",
+            benchmark = 0.617,
+            title = paste("Plot ", i, ": Proportion of HIV+ Nodes with Viral Suppression (White)", sep = ""))
+
+
+i <- i+1
+target_plot2(data = sim_targets,
+            group = "treat",
+            var_prefix = "cc.vsupp",
+            title = paste("Plot ", i, ": Proportion of HIV+ Nodes with Viral Suppression", sep = ""))
+
+# Exogenous Infections ---------------------------------------------------------
+# i <- i+1
+# target_plot(data = annual_incid2,
+#             var = "exo.ir100.B",
+#             group = "treat",
+#             benchmark = mean(c(1.438, 1.798)),
+#             title = paste("Plot ", i, ": Annual Exogenous Infections (Black)", sep = ""))
+# i <- i+1
+# target_plot(data = annual_incid2,
+#             var = "exo.ir100.H",
+#             group = "treat",
+#             benchmark = mean(c(0.653, 0.816)),
+#             title = paste("Plot ", i, ": Annual Exogenous Infections (Hispanic)", sep = ""))
+# i <- i+1
+# target_plot(data = annual_incid2,
+#             var = "exo.ir100.O",
+#             group = "treat",
+#             benchmark = mean(c(0.506, 0.633)),
+#             title = paste("Plot ", i, ": Annual Exogenous Infections (Other)", sep = ""))
+# i <- i+1
+# target_plot(data = annual_incid2,
+#             var = "exo.ir100.W",
+#             group = "treat",
+#             benchmark = mean(c(0.257, 0.3212)),
+#             title = paste("Plot ", i, ": Annual Exogenous Infections (White)", sep = ""))
+# 
+# i <- i+1
+# target_plot2(data = annual_incid2,
+#             group = "treat",
+#             var_prefix = "exo.ir100",
+#             # benchmark = 0.881,
+#             title = paste("Plot ", i, ": Annual Exogenous Infections", sep = ""))
+
+# Annualized Exogenous Incidence Rate -----------------------------------------
+i <- i+1
+target_plot(data = annual_incid2,
+            var = "exo.ir100.B",
+            group = "treat",
+            benchmark = mean(c(1.438, 1.798)),
+            target_range = c(1.438, 1.798),
+            title = paste("Plot ", i, ": Exogenous Incidence Rate (Black, Annualized)", sep = ""))
+
+i <- i+1
+target_plot(data = annual_incid2,
+            var = "exo.ir100.H",
+            group = "treat",
+            benchmark = mean(c(0.653, 0.816)),
+            target_range = c(0.653, 0.816),
+            title = paste("Plot ", i, ": Exogenous Incidence Rate (Hispanic, Annualized)", sep = ""))
+i <- i+1
+target_plot(data = annual_incid2,
+            var = "exo.ir100.O",
+            group = "treat",
+            benchmark = mean(c(0.506, 0.633)),
+            target_range = c(0.506, 0.633),
+            title = paste("Plot ", i, ": Exogenous Incidence Rate (Other, Annualized)", sep = ""))
+i <- i+1
+target_plot(data = annual_incid2,
+            var = "exo.ir100.W",
+            group = "treat",
+            benchmark = mean(c(0.257, 0.3212)),
+            target_range = c(0.257, 0.3212),
+            title = paste("Plot ", i, ": Exogenous Incidence Rate (White, Annualized)", sep = ""))
+
+
+# Annualized Total Incidence Rate -----------------------------------------
+i <- i+1
+target_plot(data = annual_incid2,
+            var = "ir100.B",
+            group = "treat",
+            benchmark = 6.42,
+            target_range = c(4.44, 9.30),
+            title = paste("Plot ", i, ": Total Incidence Rate (Black, Annualized)", sep = ""))
+i <- i+1
+target_plot(data = annual_incid2,
+            var = "ir100.H",
+            group = "treat",
+            benchmark = 2.04,
+            target_range = c(1.10, 3.79),
+            title = paste("Plot ", i, ": Total Incidence Rate (Hispanic, Annualized)", sep = ""))
+i <- i+1
+target_plot(data = annual_incid2,
+            var = "ir100.O",
+            group = "treat",
+            benchmark = 1.71,
+            target_range = c(0.55, 5.31),
+            title = paste("Plot ", i, ": Total Incidence Rate (Other, Annualized)", sep = ""))
+i <- i+1
+target_plot(data = annual_incid2,
+            var = "ir100.W",
+            group = "treat",
+            benchmark = 0.73,
+            target_range = c(0.24, 2.26),
+            title = paste("Plot ", i, ": Total Incidence Rate (White, Annualized)", sep = ""))
+
+
+# 
+# # Endogenous Infections --------------------------------------------------------
+# i <- i+1
+# target_plot(data = annual_incid,
+#             var = "incid.B",
+#             group = "sim",
+#             # benchmark = 116.3436*(1-.28),
+#             title = paste("Plot ", i, ": Annual Endogenous Infections (Black)", sep = ""))
+# i <- i+1
+# target_plot(data = annual_incid,
+#             var = "incid.H",
+#             group = "sim",
+#             # benchmark = 64.27536*(1-.40),
+#             title = paste("Plot ", i, ": Annual Endogenous Infections (Hispanic)", sep = ""))
+# i <- i+1
+# target_plot(data = annual_incid,
+#             var = "incid.O",
+#             group = "sim",
+#             # benchmark = 19.59955*(1-.37),
+#             title = paste("Plot ", i, ": Annual Endogenous Infections (Other)", sep = ""))
+# i <- i+1
+# target_plot(data = annual_incid,
+#             var = "incid.W",
+#             group = "sim",
+#             # benchmark = 24.91874*(1-.44),
+#             title = paste("Plot ", i, ": Annual Endogenous Infections (White)", sep = ""))
+# 
+# i <- i+1
+# target_plot2(data = annual_incid,
+#             group = "sim",
+#             var_prefix = "incid",
+#             # benchmark = 0.881,
+#             title = paste("Plot ", i, ": Annual Endogenous Infections", sep = ""))
+# 
+# # Annualized Incidence Rates --------------------------------------------------------
+# i <- i+1
+# target_plot(data = annual_incid,
+#             var = "total.incid.rate.B",
+#             group = "sim",
+#             title = paste("Plot ", i, ": Annualized Incidence Rate (Black, x 1000)", sep = ""))
+# i <- i+1
+# target_plot(data = annual_incid,
+#             var = "total.incid.rate.H",
+#             group = "sim",
+#             title = paste("Plot ", i, ": Annualized Incidence Rate (Hispanic, x 1000)", sep = ""))
+# i <- i+1
+# target_plot(data = annual_incid,
+#             var = "total.incid.rate.O",
+#             group = "sim",
+#             title = paste("Plot ", i, ": Annualized Incidence Rate (Other, x 1000)", sep = ""))
+# i <- i+1
+# target_plot(data = annual_incid,
+#             var = "total.incid.rate.W",
+#             group = "sim",
+#             title = paste("Plot ", i, ": Annualized Incidence Rate (White, x 1000)", sep = ""))
+# 
+# i <- i+1
+# target_plot2(data = annual_incid,
+#             var_prefix = "total.incid.rate",
+#             group = "sim",
+#             title = paste("Plot ", i, ": Annualized Incidence Rate (x 1000)", sep = ""))
+
+
+# Prevalence -------------------------------------------------------------------
+i <- i+1
+target_plot(data = sim_targets,
+            var = "i.prev",
+            group = "treat",
+            # benchmark = mean(netstats$attr$diag.status),
+            title = paste("Plot ", i, ": Prevalence, Infected", sep = ""))
+
+i <- i+1
+target_plot(data = sim_targets,
+            var = "i.prev.B",
+            group = "treat",
+            # benchmark = .354,
+            title = paste("Plot ", i, ": Prevalence, Infected (Black)", sep = ""))
+
+i <- i+1
+target_plot(data = sim_targets,
+            var = "i.prev.H",
+            group = "treat",
+            # benchmark = .114,
+            title = paste("Plot ", i, ": Prevalence, Infected (Hispanic)", sep = ""))
+
+i <- i+1
+target_plot(data = sim_targets,
+            var = "i.prev.O",
+            group = "treat",
+            # benchmark = .103,
+            title = paste("Plot ", i, ": Prevalence, Infected (Other)", sep = ""))
+
+i <- i+1
+target_plot(data = sim_targets,
+            var = "i.prev.W",
+            group = "treat",
+            # benchmark = .106,
+            title = paste("Plot ", i, ": Prevalence, Infected (White)", sep = ""))
+
+i <- i+1
+target_plot2(data = sim_targets,
+             var_prefix = "i.prev",
+             group = "treat",
+             title = paste("Plot ", i, ": Prevalence, Infected", sep = ""))
+
+
+# Racially Homophilous Ties -------------------------------------------------------------------
+# 
+# i <- i+1
+# target_plot(data = sim_targets,
+#             var = "n_edges_main.B",
+#             group = "treat",
+#             title = paste("Plot ", i, ": Number of Black/Black Partnerships (Main)", sep = ""))
+# i <- i+1
+# target_plot(data = sim_targets,
+#             var = "n_edges_main.H",
+#             group = "treat",
+#             title = paste("Plot ", i, ": Number of Hispanic/Hispanic Partnerships (Main)", sep = ""))
+# i <- i+1
+# target_plot(data = sim_targets,
+#             var = "n_edges_main.O",
+#             group = "treat",
+#             title = paste("Plot ", i, ": Number of Other/Other Partnerships (Main)", sep = ""))
+# i <- i+1
+# target_plot(data = sim_targets,
+#             var = "n_edges_main.W",
+#             group = "treat",
+#             title = paste("Plot ", i, ": Number of White/White Partnerships (Main)", sep = ""))
+# 
+# i <- i+1
+# target_plot(data = sim_targets,
+#             var = "n_edges_casual.B",
+#             group = "treat",
+#             title = paste("Plot ", i, ": Number of Black/Black Partnerships (Casual)", sep = ""))
+# i <- i+1
+# target_plot(data = sim_targets,
+#             var = "n_edges_casual.H",
+#             group = "treat",
+#             title = paste("Plot ", i, ": Number of Hispanic/Hispanic Partnerships (Casual)", sep = ""))
+# i <- i+1
+# target_plot(data = sim_targets,
+#             var = "n_edges_casual.O",
+#             group = "treat",
+#             title = paste("Plot ", i, ": Number of Other/Other Partnerships (Casual)", sep = ""))
+# i <- i+1
+# target_plot(data = sim_targets,
+#             var = "n_edges_casual.W",
+#             group = "treat",
+#             title = paste("Plot ", i, ": Number of White/White Partnerships (Casual)", sep = ""))
+# 
+# i <- i+1
+# target_plot(data = sim_targets,
+#             var = "n_edges_onetime.B",
+#             group = "treat",
+#             title = paste("Plot ", i, ": Number of Black/Black Partnerships (onetime)", sep = ""))
+# i <- i+1
+# target_plot(data = sim_targets,
+#             var = "n_edges_onetime.H",
+#             group = "treat",
+#             title = paste("Plot ", i, ": Number of Hispanic/Hispanic Partnerships (onetime)", sep = ""))
+# i <- i+1
+# target_plot(data = sim_targets,
+#             var = "n_edges_onetime.O",
+#             group = "treat",
+#             title = paste("Plot ", i, ": Number of Other/Other Partnerships (onetime)", sep = ""))
+# i <- i+1
+# target_plot(data = sim_targets,
+#             var = "n_edges_onetime.W",
+#             group = "treat",
+#             title = paste("Plot ", i, ": Number of White/White Partnerships (onetime)", sep = ""))
+# 
+
+i <- i+1
+target_plot(data = sim_targets,
+            var = "n_edges_total.B",
+            group = "treat",
+            title = paste("Plot ", i, ": Number of Black/Black Partnerships\n(All Networks)", sep = ""))
+
+
+i <- i+1
+target_plot(data = sim_targets,
+            var = "n_edges_total.H",
+            group = "treat",
+            title = paste("Plot ", i, ": Number of Hispanic/Hispanic Partnerships\n(All Networks)", sep = ""))
+i <- i+1
+target_plot(data = sim_targets,
+            var = "n_edges_total.O",
+            group = "treat",
+            title = paste("Plot ", i, ": Number of Other/Other Partnerships\n(All Networks)", sep = ""))
+i <- i+1
+target_plot(data = sim_targets,
+            var = "n_edges_total.W",
+            group = "treat",
+            title = paste("Plot ", i, ": Number of White/White Partnerships\n(All Networks)", sep = ""))
+i <- i+1
+target_plot2(data = sim_targets %>% select(time, treat, 
+                                           n_edges_total.B, n_edges_total.H,
+                                           n_edges_total.O, n_edges_total.W),
+             var_prefix = "n_edges_total",
+             group = "treat",
+            title = paste("Plot ", i, ": Number of Racially Homophilous Partnerships\n(All Networks)", sep = ""))
+i <- i+1
+target_plot2(data = sim_targets %>% select(time, treat, 
+                                           n_edges_total.BH, n_edges_total.BO, n_edges_total.BW,
+                                           n_edges_total.HO, n_edges_total.HW,
+                                           n_edges_total.OW),
+             var_prefix = "n_edges_total",
+             group = "treat",
+            title = paste("Plot ", i, ": Number of Racially Heterophilous Partnerships\n(All Networks)", sep = ""))
+
+i <- i+1
+target_plot2(data = sim_targets %>% select(time, treat, 
+                                           n_edges_total.BH,  n_edges_total.BW,
+                                           n_edges_total.HO, n_edges_total.HW,
+                                           n_edges_total.OW),
+             var_prefix = "n_edges_total",
+             group = "treat",
+            title = paste("Plot ", i, ": Number of Racially Heterophilous Partnerships\n(All Networks)", sep = ""))
+
+
+# Racial Disparities in Prevalence -------------------------------------------------------------------
+i <- i+1
+target_plot(data = sim_targets,
+            var = "i.prev.disp.BW",
+            group = "treat",
+            title = paste("Plot ", i, ": Black/White Disparity in HIV Prevalence", sep = "")) +
+  scale_y_continuous(limits = (c(.20, .30)))
+
+i <- i+1
+
+target_plot(data = sim_targets,
+            var = "i.prev.disp.HW",
+            group = "treat",
+            title = paste("Plot ", i, ": Hispanic/White Disparity in HIV Prevalence", sep = "")) +
+  scale_y_continuous(limits = (c(0, .10)))
+
+# Racial Disparities in Annualized Incidence -------------------------------------------------------------------
+#### Note we've given these plots custom y-axis scaling
+
+i <- i+1
+target_plot(data = annual_incid2,
+            var = "total.incid.rate.dispar.BW",
+            group = "treat",
+            title = paste("Plot ", i, ": Black/White Disparity in Annualized Incidence (x 1000)", sep = "")) 
+
+i <- i+1
+target_plot(data = annual_incid2,
+            var = "total.incid.rate.dispar.HW",
+            group = "treat",
+            title = paste("Plot ", i, ": Hispanic/White Disparity in Annualized Incidence (x 1000)", sep = ""))
+
+
+```
+
+```{r}
+# Updated Disparity Plots
+#### Prevalence
+i = i+1
+data = sim_targets
+var = c("i.prev.disp.HW", "i.prev.disp.BW")
+group = "treat"
+
+
+  # Create placeholder of variable we need
+  data2 <- data[, c("time", group, var)]
+  data3 <- data2 %>%
+    tidyr::pivot_longer(cols = var, names_to = "Race", values_to = "val") %>%
+    mutate(Race = case_when(str_detect(Race, "BW") ~ "Black/White",
+                            str_detect(Race, "HW") ~ "Hispanic/White")) %>%
+    rename(Treatment = treat)
+  
+data3 %>%
+    group_by(Treatment, time, Race) %>%
+    summarize(this_var = mean(val)) %>%
+    dplyr::ungroup() %>%
+    ggplot(aes(x = time, y = this_var, color = Treatment, fill = Treatment)) +
+    geom_line(aes(linetype = Race, color = Treatment)) +
+    theme_minimal() +
+    labs(y = "Difference in Prevalence",
+         x = "Time (Weeks)") +
+    ggtitle(paste("Plot ", i, ": Racial Disparities in HIV Prevalence", sep = "")) 
+
+#### Annualized Incidence Rate
+i = i+1
+data = annual_incid2
+            var = c("total.incid.rate.dispar.HW", "total.incid.rate.dispar.BW")
+            group = "treat"
+
+
+  # Create placeholder of variable we need
+  data2 <- data[, c("time", group, var)]
+  data3 <- data2 %>%
+    tidyr::pivot_longer(cols = var, names_to = "Race", values_to = "val") %>%
+    mutate(Race = case_when(str_detect(Race, "BW") ~ "Black/White",
+                            str_detect(Race, "HW") ~ "Hispanic/White")) %>%
+    rename(Treatment = treat)
+  
+data3 %>%
+    group_by(Treatment, time, Race) %>%
+    summarize(this_var = mean(val)) %>%
+    dplyr::ungroup() %>%
+    ggplot(aes(x = time, y = this_var, color = Treatment, fill = Treatment)) +
+    geom_line(aes(linetype = Race, color = Treatment)) +
+    theme_minimal() +
+    labs(y = "Difference in Annualized Incidence Rate (x 1000)",
+         x = "Time (Weeks)") +
+    ggtitle(paste("Plot ", i, ": Racial Disparities in Annualized HIV Incidence Rate", sep = "")) 
+```
+
+```{r}
+# # Relative Incidence Plots
+# annual_incid2 <- annual_incid2 %>%
+#   mutate(rel.incid.BW = total.incid.B/total.incid.W,
+#          rel.incid.HW = total.incid.H/total.incid.W,
+#          
+#          rel.incid.rate.BW = total.incid.rate.B/total.incid.rate.W,
+#          rel.incid.rate.HW = total.incid.rate.H/total.incid.rate.W)
+# 
+# i = i+1
+# data = annual_incid
+#             var = c("rel.incid.HW", "rel.incid.BW")
+#             group = "sim"
+# 
+# 
+#   # Create placeholder of variable we need
+#   data2 <- data[, c("time", group, var)]
+#   data3 <- data2 %>%
+#     tidyr::pivot_longer(cols = var, names_to = "Race", values_to = "val") %>%
+#     mutate(Race = case_when(str_detect(Race, "BW") ~ "Black/White",
+#                             str_detect(Race, "HW") ~ "Hispanic/White")) %>%
+#     rename(Treatment = sim)
+#   
+# data3 %>%
+#     group_by(Treatment, time, Race) %>%
+#     summarize(this_var = mean(val)) %>%
+#     dplyr::ungroup() %>%
+#     ggplot(aes(x = time, y = this_var, color = Treatment, fill = Treatment)) +
+#     geom_line(aes(linetype = Race, color = Treatment)) +
+#     theme_minimal() +
+#     labs(y = "Relative Annualized Incidence Rate",
+#          x = "Time (Weeks)") +
+#     ggtitle(paste("Plot ", i, ": Racial Disparities in Relative HIV Incidence", sep = "")) 
+# 
+# ####### Incidence Rate
+# 
+# i = i+1
+# data = annual_incid
+#             var = c("rel.incid.rate.HW", "rel.incid.rate.BW")
+#             group = "sim"
+# 
+# 
+#   # Create placeholder of variable we need
+#   data2 <- data[, c("time", group, var)]
+#   data3 <- data2 %>%
+#     tidyr::pivot_longer(cols = var, names_to = "Race", values_to = "val") %>%
+#     mutate(Race = case_when(str_detect(Race, "BW") ~ "Black/White",
+#                             str_detect(Race, "HW") ~ "Hispanic/White")) %>%
+#     rename(Treatment = sim)
+#   
+# data3 %>%
+#     group_by(Treatment, time, Race) %>%
+#     summarize(this_var = mean(val)) %>%
+#     dplyr::ungroup() %>%
+#     ggplot(aes(x = time, y = this_var, color = Treatment, fill = Treatment)) +
+#     geom_line(aes(linetype = Race, color = Treatment)) +
+#     theme_minimal() +
+#     labs(y = "Relative Annualized Incidence Rate",
+#          x = "Time (Weeks)") +
+#     ggtitle(paste("Plot ", i, ": Racial Disparities in Relative HIV Incidence", sep = "")) 
+```
+
+```{r}
+
+i = i+1
+data = annual_incid
+            var = c("total.incid.B", "total.incid.H", "total.incid.O", "total.incid.W")
+            group = "treat"
+
+
+  # Create placeholder of variable we need
+  data2 <- data[, c("time", group, var)]
+  data3 <- data2 %>%
+    tidyr::pivot_longer(cols = all_of(var), names_to = "Race", values_to = "val") %>%
+    mutate(Race = case_when(str_detect(Race, "W$") ~ "White",
+                            str_detect(Race, "B$") ~ "Black",
+                            str_detect(Race, "H$") ~ "Hispanic",
+                            str_detect(Race, "O$") ~ "Other",
+                            TRUE ~ NA)) %>%
+    rename(Treatment = treat)
+  
+data3 %>%
+ #   filter(Treatment == "Venues" | Treatment == "Control Model") %>%
+    group_by(Treatment, time, Race) %>%
+    summarize(this_var = mean(val)) %>%
+    dplyr::ungroup() %>%
+    ggplot(aes(x = time, y = this_var, color = Race, fill = Treatment)) +
+    geom_line(aes(linetype = Treatment, color = Race)) +
+    theme_minimal() +
+    labs(y = "Annualized Incidence Rate (x 1000)",
+         x = "Time (Weeks)") +
+    ggtitle(paste("Plot ", i, ": Incidence Rate", sep = "")) 
+```
+
+```{r}
+
+i = i+1
+data = annual_incid
+            var = c("incid.B", "incid.H", "incid.O", "incid.W")
+            group = "treat"
+
+
+  # Create placeholder of variable we need
+  data2 <- data[, c("time", group, var)]
+  data3 <- data2 %>%
+    tidyr::pivot_longer(cols = all_of(var), names_to = "Race", values_to = "val") %>%
+    mutate(Race = case_when(str_detect(Race, "W$") ~ "White",
+                            str_detect(Race, "B$") ~ "Black",
+                            str_detect(Race, "H$") ~ "Hispanic",
+                            str_detect(Race, "O$") ~ "Other",
+                            TRUE ~ NA)) %>%
+    rename(Treatment = treat)
+  
+data3 %>%
+    filter(Treatment == "Venues and Apps" | Treatment == "Control") %>%
+    group_by(Treatment, time, Race) %>%
+    summarize(this_var = mean(val)) %>%
+    dplyr::ungroup() %>%
+    ggplot(aes(x = time, y = this_var, color = Race, fill = Treatment)) +
+    geom_line(aes(linetype = Treatment, color = Race)) +
+    theme_minimal() +
+    labs(y = "Annualized Incidence Rate (x 1000)",
+         x = "Time (Weeks)") +
+    ggtitle(paste("Plot ", i, ": Incidence Rate", sep = "")) 
+```
+
+```{r}
+
+i = i+1
+data = annual_incid2 %>% dplyr::filter(time > max(time)-520) %>%
+  dplyr::mutate(time = time-min(time))
+            var = c("ir100.B", "ir100.H", "ir100.O", "ir100.W")
+            group = "treat"
+
+
+  # Create placeholder of variable we need
+  data2 <- data[, c("time", group, var)]
+  data3 <- data2 %>%
+    tidyr::pivot_longer(cols = all_of(var), names_to = "Race", values_to = "val") %>%
+    mutate(Race = case_when(str_detect(Race, "W$") ~ "White",
+                            str_detect(Race, "B$") ~ "Black",
+                            str_detect(Race, "H$") ~ "Hispanic",
+                            str_detect(Race, "O$") ~ "Other",
+                            TRUE ~ NA)) %>%
+    rename(Treatment = treat)
+  
+data3 %>%
+    filter(Treatment == "Venues and Apps" | Treatment == "Control") %>%
+    group_by(Treatment, time, Race) %>%
+    summarize(this_var = mean(val)) %>%
+    dplyr::ungroup() %>%
+    ggplot(aes(x = time, y = this_var, color = Race, fill = Treatment)) +
+    geom_line(aes(linetype = Treatment, color = Race)) +
+    theme_minimal() +
+    labs(y = "Annualized Incidence Rate (x 100)",
+         x = "Time (Weeks)") +
+    ggtitle(paste("Differences in Annualized Incidence Rate by Treatment", sep = "")) 
+```
+
+

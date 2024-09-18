@@ -20,7 +20,7 @@ path_to_restart <- paste0(est_dir, "restart-", context, ".rds")
 # `netsim` Parameters
 prep_start <- 52 * 2
 param <- EpiModel::param.net(
-  data.frame.params = readr::read_csv("data/input/params_chistig_feb19.csv"),
+  data.frame.params = readr::read_csv("data/input/params_chistig_apr18.csv"),
   netstats          = netstats,
   epistats          = epistats,
   prep.start        = Inf,

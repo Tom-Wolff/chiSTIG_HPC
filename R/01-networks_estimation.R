@@ -96,7 +96,7 @@ epistats <- list(
   age.limits = c(16, 30),
 
   # age.breaks : breaks for age categories
-  age.breaks = c(16, 20, 30), # Confirm this is the right coding
+  age.breaks = c(16, 21, 30), # Confirm this is the right coding
 
   # age.grps : number of age group categories in model
   age.grps = 2,
@@ -127,7 +127,8 @@ saveRDS(epistats, paste0(est_dir, "epistats-", context, ".rds"))
 
 library(tidyverse)
 
-egos <- read.csv("./data/input/egos_v4_1.csv") %>%
+#egos <- read.csv("./data/input/egos_v4_1.csv") %>%
+egos <- read.csv("./data/synthpop_gen/egos_v4_1_uniform_age_dist.csv") %>%
   dplyr::mutate(race_art = dplyr::case_when(race_ethnicity == "whiteNH" ~ "white",
                                       race_ethnicity == "blackNH" ~ "black",
                                       race_ethnicity == "hispanic" ~ "hispanic",
@@ -149,7 +150,9 @@ egos <- read.csv("./data/input/egos_v4_1.csv") %>%
                 deg.casl = init_cas_cat,
                 deg.tot = init_pers_cat,
 
-                venues_all = venues_list_1week)
+                # venues_all = venue_list)
+
+                 venues_all = venue_list_1week)
 
 
 #
@@ -275,7 +278,8 @@ asmr[asmr$age >= max.age, ] <- 1
 # Read in target stats (for netstats) #
 #######################################
 
-target_df <- read.csv("./from_chistig/target_values_full.csv")
+ old_target_df <- read.csv("./from_chistig/target_values_full.csv")
+target_df <- read.csv("./data/synthpop_gen/target_values_v4_1_uniform_age_dist.csv")
 
 # Function for quickly extracting target values from dataframe
 target_extract = function(df = target_df, term, model) {
@@ -285,8 +289,8 @@ target_extract = function(df = target_df, term, model) {
   return(target_val)
 }
 
-
-
+# Get Duration/dissolution coefficients based on ARTNet data
+source("./R/dur_coefs.R")
 
 
 # Netstats
@@ -402,6 +406,15 @@ netstats <- list(
                            term = "edges",
                            model = "main"),
 
+    # nodematch_age.grp
+#    nodematch_age.grp = target_extract(term = "nodematch.age", model = "main"),
+    nodematch_age.grp = c(target_extract(term = "nodematch.age.16to20", model = "main"),
+                          target_extract(term = "nodematch.age.21to29", model = "main")),
+
+    # nodefactor_age.grp
+    # nodefactor_age.grp = c(target_extract(term = "nodefactor.age.16to20", model = "main"),
+    #                        target_extract(term = "nodefactor.age.21to29", model = "main")),
+
     # concurrent
     concurrent = target_extract(df = target_df,
                                 term = "concurrent",
@@ -420,19 +433,12 @@ netstats <- list(
     # nodematch black
     nodematch_race.1 = target_extract(term = "nodematch.race_ethnicity.blackNH", model = "main"),
 
-    # nodematch_age.grp
-    nodematch_age.grp = target_extract(term = "nodematch.age", model = "main"),
-    # nodematch_age.grp = c(target_extract(term = "nodematch.age.16to20", model = "main"),
-    #                       target_extract(term = "nodematch.age.21to29", model = "main")),
 
-    # nodefactor_age.grp
-    nodefactor_age.grp = c(target_extract(term = "nodefactor.age.16to20", model = "main"),
-                           target_extract(term = "nodefactor.age.21to29", model = "main")),
 
     # nodefactor_init_cas_cat
     nodefactor_deg.casl = c(target_extract(term = "nodefactor.init_cas_cat.0", model = "main"),
                             target_extract(term = "nodefactor.init_cas_cat.1", model = "main"),
-                            target_extract(term = "nodefactor.init_cas_cat.2", model = "main")),
+                            target_extract(term = "nodefactor.init_cas_cat.2+", model = "main")),
 
     # fuzzynodematch_venues_all
     fuzzynodematch_venues.all = target_extract(term = "fuzzynodematch.venues_all.TRUE", model = "main"),
@@ -444,7 +450,15 @@ netstats <- list(
     fuzzynodematch_apps.dating = target_extract(term = "fuzzynodematch.apps_dating.TRUE", model = "main"),
 
     # dissolution model
-    dissolution = dissolution_coefs(~offset(edges), duration = 115)
+    dissolution = dissolution_coefs(~offset(edges), duration = 115, d.rate = 0.001386813),
+
+    diss.homog = dissolution_coefs(dissolution = ~offset(edges),
+                                             duration = out$main$durs.main.homog$mean.dur.adj,
+                                             d.rate = 0.001386813),
+    diss.byage = dissolution_coefs(dissolution = ~offset(edges) +
+                                               offset(nodematch("age.grp", diff = TRUE)),
+                                             duration = out$main$durs.main.byage$mean.dur.adj,
+                                             d.rate = 0.001386813)
 
 
 
@@ -456,6 +470,16 @@ netstats <- list(
     edges = target_extract(df = target_df,
                            term = "edges",
                            model = "casual"),
+
+    # nodematch_age.grp
+    # nodematch_age.grp = target_extract(term = "nodematch.age", model = "casual"),
+    nodematch_age.grp = c(target_extract(term = "nodematch.age.16to20", model = "casual"),
+                          target_extract(term = "nodematch.age.21to29", model = "casual")),
+
+
+    # nodefactor_age.grp
+    # nodefactor_age.grp = c(target_extract(term = "nodefactor.age.16to20", model = "casual"),
+    #                        target_extract(term = "nodefactor.age.21to29", model = "casual")),
 
     # concurrent
     concurrent = target_extract(df = target_df,
@@ -475,19 +499,11 @@ netstats <- list(
     # nodematch black
     nodematch_race.1 = target_extract(term = "nodematch.race_ethnicity.blackNH", model = "casual"),
 
-    # nodematch_age.grp
-    nodematch_age.grp = target_extract(term = "nodematch.age", model = "casual"),
-    # nodematch_age.grp = c(target_extract(term = "nodematch.age.16to20", model = "casual"),
-    #                       target_extract(term = "nodematch.age.21to29", model = "casual")),
 
-
-    # nodefactor_age.grp
-    nodefactor_age.grp = c(target_extract(term = "nodefactor.age.16to20", model = "casual"),
-                           target_extract(term = "nodefactor.age.21to29", model = "casual")),
 
     # nodefactor_init_cas_cat
     nodefactor_deg.main = c(target_extract(term = "nodefactor.init_ser_cat.0", model = "casual"),
-                            target_extract(term = "nodefactor.init_ser_cat.1", model = "casual")),
+                            target_extract(term = "nodefactor.init_ser_cat.1+", model = "casual")),
 
     # fuzzynodematch_venues_all
     fuzzynodematch_venues.all = target_extract(term = "fuzzynodematch.venues_all.TRUE", model = "casual"),
@@ -499,7 +515,15 @@ netstats <- list(
     fuzzynodematch_apps.dating = target_extract(term = "fuzzynodematch.apps_dating.TRUE", model = "casual"),
 
     # dissolution model
-    dissolution = dissolution_coefs(~offset(edges), duration = 72)
+    dissolution = dissolution_coefs(~offset(edges), duration = 72, d.rate = 0.001386813),
+
+    diss.homog = dissolution_coefs(dissolution = ~offset(edges),
+                                             duration = out$casl$durs.casl.homog$mean.dur.adj,
+                                             d.rate = 0.001386813),
+    diss.byage = dissolution_coefs(dissolution = ~offset(edges) +
+                                               offset(nodematch("age.grp", diff = TRUE)),
+                                             duration = out$casl$durs.casl.byage$mean.dur.adj,
+                                             d.rate = 0.001386813)
 
 
   ),
@@ -509,45 +533,45 @@ netstats <- list(
 
     edges = target_extract(df = target_df,
                            term = "edges",
-                           model = "onetime"),
+                           model = "one.time"),
 
     # nodefactor race
-    nodefactor_race = c(target_extract(term = "nodefactor.race_ethnicity.blackNH", model = "onetime"),
-                        target_extract(term = "nodefactor.race_ethnicity.hispanic", model = "onetime"),
-                        target_extract(term = "nodefactor.race_ethnicity.otherNH", model = "onetime"),
-                        target_extract(term = "nodefactor.race_ethnicity.whiteNH", model = "onetime")),
+    nodefactor_race = c(target_extract(term = "nodefactor.race_ethnicity.blackNH", model = "one.time"),
+                        target_extract(term = "nodefactor.race_ethnicity.hispanic", model = "one.time"),
+                        target_extract(term = "nodefactor.race_ethnicity.otherNH", model = "one.time"),
+                        target_extract(term = "nodefactor.race_ethnicity.whiteNH", model = "one.time")),
 
 
     # nodematch race
-    nodematch_race = target_extract(term = "nodematch.race_ethnicity", model = "onetime"),
+    nodematch_race = target_extract(term = "nodematch.race_ethnicity", model = "one.time"),
 
     # nodematch black
-    nodematch_race.1 = target_extract(term = "nodematch.race_ethnicity.blackNH", model = "onetime"),
+    nodematch_race.1 = target_extract(term = "nodematch.race_ethnicity.blackNH", model = "one.time"),
 
     # nodematch_age.grp
-    nodematch_age.grp = target_extract(term = "nodematch.age", model = "onetime"),
-    # nodematch_age.grp = c(target_extract(term = "nodematch.age.16to20", model = "onetime"),
-    #                       target_extract(term = "nodematch.age.21to29", model = "onetime")),
+    nodematch_age.grp = target_extract(term = "nodematch.age", model = "one.time"),
+    # nodematch_age.grp = c(target_extract(term = "nodematch.age.16to20", model = "one.time"),
+    #                       target_extract(term = "nodematch.age.21to29", model = "one.time")),
 
     # nodefactor_age.grp
-    nodefactor_age.grp = c(target_extract(term = "nodefactor.age.16to20", model = "onetime"),
-                           target_extract(term = "nodefactor.age.21to29", model = "onetime")),
+    # nodefactor_age.grp = c(target_extract(term = "nodefactor.age.16to20", model = "one.time"),
+    #                        target_extract(term = "nodefactor.age.21to29", model = "one.time")),
 
     # nodefactor_init_pers_cat
-    nodefactor_deg.tot = c(target_extract(term = "nodefactor.init_pers_cat.0", model = "onetime"),
-                           target_extract(term = "nodefactor.init_pers_cat.1", model = "onetime"),
-                           target_extract(term = "nodefactor.init_pers_cat.2", model = "onetime"),
-                           target_extract(term = "nodefactor.init_pers_cat.3", model = "onetime")),
+    nodefactor_deg.tot = c(target_extract(term = "nodefactor.init_pers_cat.0", model = "one.time"),
+                           target_extract(term = "nodefactor.init_pers_cat.1", model = "one.time"),
+                           target_extract(term = "nodefactor.init_pers_cat.2", model = "one.time"),
+                           target_extract(term = "nodefactor.init_pers_cat.3+", model = "one.time")),
 
 
     # fuzzynodematch_venues_all
-    fuzzynodematch_venues.all = target_extract(term = "fuzzynodematch.venues_all.TRUE", model = "onetime"),
+    fuzzynodematch_venues.all = target_extract(term = "fuzzynodematch.venues_all.TRUE", model = "one.time"),
 
     # fuzzynodematch_apps_all
-    fuzzynodematch_apps.all = target_extract(term = "fuzzynodematch.apps_all.TRUE", model = "onetime"),
+    fuzzynodematch_apps.all = target_extract(term = "fuzzynodematch.apps_all.TRUE", model = "one.time"),
 
     # fuzzynodematch_apps_dating
-    fuzzynodematch_apps.dating = target_extract(term = "fuzzynodematch.apps_dating.TRUE", model = "onetime")
+    fuzzynodematch_apps.dating = target_extract(term = "fuzzynodematch.apps_dating.TRUE", model = "one.time")
 
     # edges
     # nodefactor_race
@@ -564,7 +588,7 @@ netstats <- list(
   )
 )
 
-saveRDS(netstats, paste0(est_dir, "netstats-", context, ".rds"))
+saveRDS(netstats, paste0(est_dir, "netstats-level-", context, ".rds"))
 
 
 ### Initialize network
@@ -619,25 +643,26 @@ nw_inst <- nw_main
 # corresponds to which ERGM term:
 
 model_main <- ~ edges +
+  nodematch("age.grp", diff = TRUE) +
+  # nodefactor("age.grp", levels= 1) +
    concurrent +
     nodefactor("race", levels = -4) +
     nodematch("race") +
     # nodematch("race", diff = TRUE, levels = 1) +
-    nodefactor("age.grp", levels= 1) +
-    nodematch("age.grp") +
     # nodematch("age.grp", levels = -1) +
     nodefactor("deg.casl", levels= -1)
 
 
 target.stats.main <- c(
   edges = netstats$main$edges,
+  # nodematch_race.1 = netstats$main$nodematch_race.1,
+  nodematch_age.grp = netstats$main$nodematch_age.grp,
+  # nodefactor_age.grp = netstats$main$nodefactor_age.grp[1],
+  # nodematch_age.grp = netstats$main$nodematch_age.grp[-1],
    concurrent = netstats$main$concurrent,
     nodefactor_race = netstats$main$nodefactor_race[1:3],
     nodematch_race = netstats$main$nodematch_race,
-    # nodematch_race.1 = netstats$main$nodematch_race.1,
-    nodefactor_age.grp = netstats$main$nodefactor_age.grp[1],
-    nodematch_age.grp = netstats$main$nodematch_age.grp,
-  # nodematch_age.grp = netstats$main$nodematch_age.grp[-1],
+
     nodefactor_deg.casl = netstats$main$nodefactor_deg.casl[-1]
   )
 target.stats.main <- unname(target.stats.main)
@@ -657,7 +682,10 @@ fit_main <- netest(
   nw = nw_main,
   formation = model_main,
   target.stats = target.stats.main,
-  coef.diss = netstats$main$dissolution,
+  coef.diss = dissolution_coefs(dissolution = ~offset(edges) +
+                                offset(nodematch("age.grp", diff = TRUE)),
+                                duration = out$main$durs.main.byage$mean.dur.adj,
+                                d.rate = 0.001386813),
   set.control.ergm =
     control.ergm(
       parallel = 4,
@@ -681,23 +709,23 @@ coef_df <- data.frame(treatment = "Basic",
 # A2. Casual Model (No Apps or Venues) -----------------------------------------
 
 model_casl <- ~ edges +
+  # nodefactor("age.grp", levels= 1) +
+  nodematch("age.grp", diff = TRUE) +
   concurrent +
   nodefactor("race", levels=-4) +
   nodematch("race") +
   # nodematch("race", diff=TRUE, levels=1) +
-  nodefactor("age.grp", levels= 1) +
-  nodematch("age.grp") +
   nodefactor("deg.main", levels=-1)
 
 
 target.stats.casl <- c(
   edges =                           netstats$casl$edges,
+  # nodefactor_age.grp =            netstats$casl$nodefactor_age.grp[1],
+  nodematch_age.grp =             netstats$casl$nodematch_age.grp,
   concurrent =                      netstats$casl$concurrent,
   nodefactor_race =               netstats$casl$nodefactor_race[1:3],
   nodematch_race =                netstats$casl$nodematch_race,
   # nodematch_race.1 =              netstats$casl$nodematch_race.1,
-  nodefactor_age.grp =            netstats$casl$nodefactor_age.grp[1],
-  nodematch_age.grp =             netstats$casl$nodematch_age.grp,
   nodefactor_deg.main =           netstats$casl$nodefactor_deg.main[-1]
 )
 target.stats.casl <- unname(target.stats.casl)
@@ -718,7 +746,10 @@ fit_casl <- netest(
   nw = nw_casl,
   formation = model_casl,
   target.stats = target.stats.casl,
-  coef.diss = netstats$casl$dissolution,
+  coef.diss = dissolution_coefs(dissolution = ~offset(edges) +
+                                  offset(nodematch("age.grp", diff = TRUE)),
+                                duration = out$casl$durs.casl.byage$mean.dur.adj,
+                                d.rate = 0.001386813),
   set.control.ergm =
     control.ergm(
       parallel = 4,
@@ -749,7 +780,7 @@ model_inst <-  ~ edges +
   nodefactor("race", levels=-4) +
   nodematch("race") +
   # nodematch("race", diff=TRUE, levels=1) +
-  nodefactor("age.grp", levels = 1) +
+ # nodefactor("age.grp", levels = 1) +
   nodematch("age.grp") +
    nodefactor("deg.tot", levels=-1)
 
@@ -758,7 +789,7 @@ target.stats.inst <- c(
   nodefactor_race =               netstats$inst$nodefactor_race[1:3],
   nodematch_race =                netstats$inst$nodematch_race,
   # nodematch_race.1 =              netstats$inst$nodematch_race.1,
-  nodefactor_age.grp =            netstats$inst$nodefactor_age.grp[1],
+#  nodefactor_age.grp =            netstats$inst$nodefactor_age.grp[1],
   nodematch_age.grp =             netstats$inst$nodematch_age.grp,
    nodefactor_deg.tot =           netstats$inst$nodefactor_deg.tot[-1]
 )
@@ -794,7 +825,7 @@ coef_df <- dplyr::bind_rows(coef_df, inst_df)
 
 # A4. Save Data (No Apps or Venues)---------------------------------------------
 out <- list(fit_main = fit_main, fit_casl = fit_casl, fit_inst = fit_inst)
-saveRDS(out, paste0(est_dir, "basic_netest-", context, ".rds"))
+saveRDS(out, paste0(est_dir, "basic_netest-level-allvenues", context, ".rds"))
 
 
 
@@ -995,7 +1026,7 @@ coef_df <- dplyr::bind_rows(coef_df, inst_df)
 
 # B4. Save Data (With Apps and Venues) -----------------------------------------
 out <- list(fit_main = fit_main, fit_casl = fit_casl, fit_inst = fit_inst)
-saveRDS(out, paste0(est_dir, "venues_apps_netest-", context, ".rds"))
+saveRDS(out, paste0(est_dir, "venues_apps_netest-level-allvenues", context, ".rds"))
 
 ################################
 
@@ -1191,7 +1222,7 @@ coef_df <- dplyr::bind_rows(coef_df, inst_df)
 
 # C4. Save Data (With Apps and Venues) -----------------------------------------
 out <- list(fit_main = fit_main, fit_casl = fit_casl, fit_inst = fit_inst)
-saveRDS(out, paste0(est_dir, "apps_only_netest-", context, ".rds"))
+saveRDS(out, paste0(est_dir, "apps_only_netest-level-allvenues", context, ".rds"))
 
 #################################
 
@@ -1388,7 +1419,7 @@ coef_df <- dplyr::bind_rows(coef_df, inst_df)
 
 # D4. Save Data (Venues Only) -----------------------------------------
 out <- list(fit_main = fit_main, fit_casl = fit_casl, fit_inst = fit_inst)
-saveRDS(out, paste0(est_dir, "venue_only_netest-", context, ".rds"))
+saveRDS(out, paste0(est_dir, "venue_only_netest-level-allvenues", context, ".rds"))
 
 #######################
 

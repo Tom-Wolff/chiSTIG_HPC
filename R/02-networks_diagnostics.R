@@ -21,7 +21,7 @@ if (context == "local") {
 nsteps <- 500
 
 # Main -------------------------------------------------------------------------
-est <- readRDS(paste0(est_dir, "netest-", context, ".rds"))
+est <- readRDS(paste0(est_dir, "basic_netest-level-", context, ".rds"))
 fit_main <- est[["fit_main"]]
 
 # model_main_dx <- ~edges +
@@ -35,8 +35,16 @@ fit_main <- est[["fit_main"]]
 #   nodematch("role.class", diff = TRUE) +
 #   degree(0:3)
 
-model_main_dx <- ~edges +
-  fuzzynodematch("venues.all", binary=TRUE)
+model_main_dx <- ~ edges +
+  concurrent +
+  nodefactor("race", levels = -4) +
+  nodematch("race") +
+  # nodematch("race", diff = TRUE, levels = 1) +
+  nodefactor("age.grp", levels= 1) +
+  nodematch("age.grp") +
+  nodefactor("deg.casl", levels= -1)# +
+  # fuzzynodematch("venues.all", binary=TRUE) +
+  # fuzzynodematch("apps.all", binary = TRUE)
 
 dx_main <- netdx(
   fit_main,
