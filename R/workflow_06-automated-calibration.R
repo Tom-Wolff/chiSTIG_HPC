@@ -316,7 +316,7 @@ calib_object <- list(
     wave1 = list(
       job1 = list(
         targets = paste0("ir100.", c("B", "H", "O", "W")),
-        targets_val = c(17.5, 3.5, 2, 1),
+        targets_val = c(6.42, 2.04, 1.71, 0.73),
         params = paste0("hiv.trans.scale_", 1:4),
         initial_proposals = dplyr::tibble(
           hiv.trans.scale_1 = sample(seq(10, 19, length.out = n_sims)), # Need to update for parameters
