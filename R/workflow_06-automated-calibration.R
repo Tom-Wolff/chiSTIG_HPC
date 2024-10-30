@@ -320,9 +320,9 @@ calib_object <- list(
         params = paste0("hiv.trans.scale_", 1:4),
         initial_proposals = dplyr::tibble(
           hiv.trans.scale_1 = sample(seq(10, 19, length.out = n_sims)), # Need to update for parameters
-          hiv.trans.scale_2 = sample(seq(2.5, 4.5, length.out = n_sims)),
-          hiv.trans.scale_3 = sample(seq(1, 3, length.out = n_sims)),
-          hiv.trans.scale_4 = sample(seq(0.9, 1.1, length.out = n_sims))
+          hiv.trans.scale_2 = sample(seq(1, 5, length.out = n_sims)),
+          hiv.trans.scale_3 = sample(seq(1, 5, length.out = n_sims)),
+          hiv.trans.scale_4 = sample(seq(0.5, 3, length.out = n_sims))
         ),
         make_next_proposals =
           swfcalib::make_proposer_se_range(n_sims, retain_prop = 0.3),
