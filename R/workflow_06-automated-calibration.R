@@ -24,6 +24,8 @@ source("./R/utils-0_project_settings.R")
 context <- "hpc"
 max_cores <- 1
 
+endo_ir_targets_val <- c(4.802, 1.3055, 1.1405, 0.4409)
+
 # Define the `model` function
 model <- function(proposal) {
   # Load all required elements
@@ -53,7 +55,7 @@ model <- function(proposal) {
   est <- readRDS(path_to_est)
 
   ir_targets_val = c(6.42, 2.04, 1.71, 0.73)
-  endo_ir_targets_val = c(4.802, 1.3055, 1.1405, 0.4409)
+  endo_ir_targets_val = endo_ir_targets_val
 
   # I think this needs to be loaded here to get `calibration_trackers` to work
   source("./R/utils-targets.R")
