@@ -24,7 +24,6 @@ source("./R/utils-0_project_settings.R")
 context <- "hpc"
 max_cores <- 1
 
-endo_ir_targets_val <- c(4.802, 1.3055, 1.1405, 0.4409)
 
 # Define the `model` function
 model <- function(proposal) {
@@ -55,7 +54,7 @@ model <- function(proposal) {
   est <- readRDS(path_to_est)
 
   ir_targets_val = c(6.42, 2.04, 1.71, 0.73)
-  endo_ir_targets_val = endo_ir_targets_val
+  endo_ir_targets_val = c(4.802, 1.3055, 1.1405, 0.4409)
 
   # I think this needs to be loaded here to get `calibration_trackers` to work
   source("./R/utils-targets.R")
@@ -333,7 +332,7 @@ calib_object <- list(
     wave1 = list(
       job1 = list(
         targets = paste0("endo.ir100.", c("B", "H", "O", "W")),
-        targets_val = endo_ir_targets_val,
+        targets_val = c(4.802, 1.3055, 1.1405, 0.4409),
         params = paste0("hiv.trans.scale_", 1:4),
         initial_proposals = dplyr::tibble(
           hiv.trans.scale_1 = sample(seq(10, 19, length.out = n_sims)), # Need to update for parameters
