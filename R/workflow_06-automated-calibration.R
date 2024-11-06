@@ -53,6 +53,7 @@ model <- function(proposal) {
   est <- readRDS(path_to_est)
 
   ir_targets_val = c(6.42, 2.04, 1.71, 0.73)
+  endo_ir_targets_val = c(4.802, 1.3055, 1.1405, 0.4409)
 
   # I think this needs to be loaded here to get `calibration_trackers` to work
   source("./R/utils-targets.R")
@@ -108,15 +109,22 @@ model <- function(proposal) {
     mutate(std_ir100.B = ir100.B/ir_targets_val[[1]],
            std_ir100.H = ir100.H/ir_targets_val[[2]],
            std_ir100.O = ir100.O/ir_targets_val[[3]],
-           std_ir100.W = ir100.W/ir_targets_val[[4]]) |>
+           std_ir100.W = ir100.W/ir_targets_val[[4]],
+
+           std_endo.ir100.B = endo.ir100.B/endo_ir_targets_val[[1]],
+           std_endo.ir100.H = endo.ir100.H/endo_ir_targets_val[[2]],
+           std_endo.ir100.O = endo.ir100.O/endo_ir_targets_val[[3]],
+           std_endo.ir100.W = endo.ir100.W/endo_ir_targets_val[[4]]
+           ) |>
     select(
       cc.dx.B, cc.dx.H, cc.dx.O, cc.dx.W,
       cc.linked1m.B, cc.linked1m.H, cc.linked1m.O, cc.linked1m.W,
       cc.vsupp.B, cc.vsupp.H, cc.vsupp.O, cc.vsupp.W,
       exo.ir100.B, exo.ir100.H, exo.ir100.O, exo.ir100.W,
-      # endo.ir100.B, endo.ir100.H, endo.ir100.O, endo.ir100.W,
+      endo.ir100.B, endo.ir100.H, endo.ir100.O, endo.ir100.W,
       ir100.B, ir100.H, ir100.O, ir100.W,
-      std_ir100.B, std_ir100.H, std_ir100.O, std_ir100.W
+      std_ir100.B, std_ir100.H, std_ir100.O, std_ir100.W,
+      std_endo.ir100.B, std_endo.ir100.H, std_endo.ir100.O, std_endo.ir100.W
       # i.prev.dx.B, i.prev.dx.H, i.prev.dx.O, i.prev.dx.W,
     ) |>
     summarise(across(everything(), ~ mean(.x, na.rm = TRUE)))
@@ -322,8 +330,8 @@ calib_object <- list(
 # Wave 4 (Trans Scale and Total Incidence Rate)
     wave1 = list(
       job1 = list(
-        targets = paste0("std_ir100.", c("B", "H", "O", "W")),
-        targets_val = c(1, 1, 1, 1),
+        targets = paste0("endo.ir100.", c("B", "H", "O", "W")),
+        targets_val = endo_ir_targets_val,
         params = paste0("hiv.trans.scale_", 1:4),
         initial_proposals = dplyr::tibble(
           hiv.trans.scale_1 = sample(seq(10, 19, length.out = n_sims)), # Need to update for parameters
