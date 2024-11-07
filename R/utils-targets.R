@@ -50,7 +50,7 @@ targets <- c(
   log.exo.ir100.H = log(0.7345),
   log.exo.ir100.O = log(0.5695),
   log.exo.ir100.W = log(0.2891),
-  ### Endogenous incidence rate
+  ### Total incidence rate
   ir100.B = 6.42,
   ir100.H = 2.04,
   ir100.O = 1.71,
@@ -58,7 +58,17 @@ targets <- c(
   log.ir100.B = log(6.42),
   log.ir100.H = log(2.04),
   log.ir100.O = log(1.71),
-  log.ir100.W = log(0.73)
+  log.ir100.W = log(0.73),
+  ### Endogenous incidence rate
+  endo.ir100.B = 6.42 - 1.618,
+  endo.ir100.H = 2.04 - 0.7345,
+  endo.ir100.O = 1.71 - 0.5695,
+  endo.ir100.W = 0.73 - 0.2891,
+  log.endo.ir100.B = log(6.42 - 1.618),
+  log.endo.ir100.H = log(2.04 - 0.7345),
+  log.endo.ir100.O = log(1.71 - 0.5695),
+  log.endo.ir100.W = log(0.73 - 0.2891)
+
 )
 
 

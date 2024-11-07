@@ -209,10 +209,10 @@ scenarios_df <- tibble(
  # hiv.trans.scale_4 = seq(     0.8,      1.2, length.out = n_scenarios)
 
  # This was for calibrating on prevalence
- hiv.trans.scale_1 = seq(       17,     19, length.out = n_scenarios),
- hiv.trans.scale_2 = seq(     5.2,      5.2, length.out = n_scenarios),
- hiv.trans.scale_3 = seq(     3.04,      3.04, length.out = n_scenarios),
- hiv.trans.scale_4 = seq(     1,      1, length.out = n_scenarios)
+ hiv.trans.scale_1 = c(1, seq(       17.5, 17.5, length.out = n_scenarios-1)),
+ hiv.trans.scale_2 = c(1, seq(     5.2,      5.2, length.out = n_scenarios-1)),
+ hiv.trans.scale_3 = c(1, seq(     3.04,      3.04, length.out = n_scenarios-1)),
+ hiv.trans.scale_4 = c(1, seq(     .25,      1, length.out = n_scenarios-1))
 
   # tt.partial.supp.prob_1 = c(0, .2),
   # tt.partial.supp.prob_2 = c(0, .2),
@@ -270,7 +270,7 @@ start_time <- Sys.time()
 
 EpiModelHPC::netsim_scenarios(
   path_to_est, param, init, control, scenarios_list,
-  n_rep = 1,
+  n_rep = 20,
   n_cores = 10,
   output_dir = "data/intermediate/calibration",
   #libraries = NULL,

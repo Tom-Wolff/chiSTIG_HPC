@@ -103,6 +103,43 @@ process_one_batch <- function(scenario_infos) {
     ggplot(aes(x = time, y = val, group = race, color = race)) +
     geom_line()
 
+  d_sim %>% select(time, starts_with("ir100")) %>%
+    mutate(dev.B = ir100.B - 6.42,
+           dev.H = ir100.H - 2.04,
+           dev.O = ir100.O - 1.71,
+           dev.W = ir100.W - 0.73) %>%
+    select(time, starts_with("ir100")) %>%
+    tidyr::pivot_longer(cols = starts_with("ir100"),
+                        names_to = "race",
+                        values_to = "val") %>%
+    ggplot(aes(x = time, y = val, group = race, color = race)) +
+    geom_line()
+
+  d_sim %>% select(time, starts_with("endo.ir100")) %>%
+    mutate(dev.B = ir100.B - (6.42 - mean(c(1.438, 1.798))),
+           dev.H = ir100.H - (2.04 - mean(c(0.653, 0.816))),
+           dev.O = ir100.O - (1.71 - mean(c(0.506, 0.633))),
+           dev.W = ir100.W - (0.73 - mean(c(0.257, 0.3212)))) %>%
+    select(time, starts_with("endo.ir100")) %>%
+    tidyr::pivot_longer(cols = starts_with("endo.ir100"),
+                        names_to = "race",
+                        values_to = "val") %>%
+    ggplot(aes(x = time, y = val, group = race, color = race)) +
+    geom_line()
+
+  d_sim %>% select(time, starts_with("exo.ir100")) %>%
+    mutate(dev.B = ir100.B - (mean(c(1.438, 1.798))),
+           dev.H = ir100.H - (mean(c(0.653, 0.816))),
+           dev.O = ir100.O - (mean(c(0.506, 0.633))),
+           dev.W = ir100.W - (mean(c(0.257, 0.3212)))) %>%
+    select(time, starts_with("exo.ir100")) %>%
+    tidyr::pivot_longer(cols = starts_with("exo.ir100"),
+                        names_to = "race",
+                        values_to = "val") %>%
+    ggplot(aes(x = time, y = val, group = race, color = race)) +
+    geom_line()
+
+
 
   d_sim2 <- d_sim %>% # from "R/utils-targets.R"
     filter(time >= max(time) - 52) # %>%
