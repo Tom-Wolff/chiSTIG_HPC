@@ -184,7 +184,7 @@ wf <- add_workflow_step(
   wf_summary = wf,
   step_tmpl = step_tmpl_netsim_scenarios(
     path_to_est, param, init, control,
-    scenarios_list = NULL, #cenarios_list,
+    scenarios_list = scenarios_list,
     output_dir = "./data/intermediate/calibration",
     # libraries = c(#"EpiModelHIV",
     #               "slurmworkflow",
