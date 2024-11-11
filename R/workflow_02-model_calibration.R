@@ -158,10 +158,10 @@ scenarios_df <- tibble(
   # hiv.trans.scale_4 = seq(     0.8,      1.2, length.out = n_scenarios)
 
   # This was for calibrating on prevalence
-  hiv.trans.scale_1 = c(1, seq(       17.5, 17.5, length.out = n_scenarios-1)),
-  hiv.trans.scale_2 = c(1, seq(     5.2,      5.2, length.out = n_scenarios-1)),
-  hiv.trans.scale_3 = c(1, seq(     3.04,      3.04, length.out = n_scenarios-1)),
-  hiv.trans.scale_4 = c(1, seq(     .25,      1, length.out = n_scenarios-1))
+  hiv.trans.scale_1 = seq(       14.5, 17.5, length.out = n_scenarios),
+  hiv.trans.scale_2 = seq(     2.2,      4.2, length.out = n_scenarios),
+  hiv.trans.scale_3 = seq(     1.2,      3.04, length.out = n_scenarios),
+  hiv.trans.scale_4 = seq(     .625,      .625, length.out = n_scenarios)
 
   # tt.partial.supp.prob_1 = c(0, .2),
   # tt.partial.supp.prob_2 = c(0, .2),
@@ -178,6 +178,10 @@ scenarios_df <- tibble(
   # tt.durable.supp.prob_3 = c(0, .4),
   # tt.durable.supp.prob_4 = c(0, .4)
 )
+
+write.csv(scenarios_df, paste("./scenarios_", Sys.Date(), ".csv", sep = ""))
+
+
 scenarios_list <- EpiModel::create_scenario_list(scenarios_df)
 
 wf <- add_workflow_step(
@@ -208,23 +212,23 @@ wf <- add_workflow_step(
 # # Process calibrations
 # #
 # # produce a data frame with the calibration targets for each scenario
-wf <- add_workflow_step(
-  wf_summary = wf,
-  step_tmpl = step_tmpl_do_call_script(
-    r_script = "./R/11-calibration_process.R",
-    args = list(
-      context = "hpc",
-      ncores = 15
-    ),
-    setup_lines = hpc_configs$r_loader
-  ),
-  sbatch_opts = list(
-    "cpus-per-task" = 15,
-    "time" = "04:00:00",
-    "mem-per-cpu" = "4G",
-    "mail-type" = "END"
-  )
-)
+# wf <- add_workflow_step(
+#   wf_summary = wf,
+#   step_tmpl = step_tmpl_do_call_script(
+#     r_script = "./R/11-calibration_process.R",
+#     args = list(
+#       context = "hpc",
+#       ncores = 15
+#     ),
+#     setup_lines = hpc_configs$r_loader
+#   ),
+#   sbatch_opts = list(
+#     "cpus-per-task" = 15,
+#     "time" = "04:00:00",
+#     "mem-per-cpu" = "4G",
+#     "mail-type" = "END"
+#   )
+# )
 
 # Send the workflow folder to the <HPC> and run it
 #

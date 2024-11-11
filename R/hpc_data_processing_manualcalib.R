@@ -51,9 +51,9 @@ for (i in 1:length(files)) {
            cc.dx = num_diagnosed/i.num,
            sim = i,
            ### Lines for manual calibration data
-           treat = as.numeric(stringr::str_extract(files[[i]], "^*\\d")),
+           treat = stringr::str_extract(files[[i]], "^*\\d"),
            trial = stringr::str_extract(files[[i]], "\\d*.rds"),
-           trial = as.numeric(stringr::str_replace_all(trial, ".rds", ""))
+           trial = stringr::str_replace_all(trial, ".rds", "")
            ### Lines for proper HPC runs
            # treat = case_when(str_detect(files[[i]], "apps") ~ "Apps",
                                  # str_detect(files[[i]], "both") ~ "Venues and Apps",
@@ -271,13 +271,13 @@ sim_targets %>%
 
 sim_targets %>%
   filter(time > 3000) %>%
-  ggplot(aes(x = time, y = i.prev, color = treat)) +
+  ggplot(aes(x = time, y = i.prev, color = as.factor(trial))) +
   geom_line(alpha = .4) +
   labs(title = "Prevalence",
        x = "Time",
        y = NULL) +
   theme_classic() +
-  facet_grid(cols = vars(trial))
+  facet_grid(cols = vars(treat))
 
 sim_targets %>%
   filter(time > 3000) %>%
