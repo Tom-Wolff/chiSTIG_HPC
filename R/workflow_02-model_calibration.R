@@ -158,9 +158,9 @@ scenarios_df <- tibble(
   # hiv.trans.scale_4 = seq(     0.8,      1.2, length.out = n_scenarios)
 
   # This was for calibrating on prevalence
-  hiv.trans.scale_1 = seq(       14.5, 17.5, length.out = n_scenarios),
-  hiv.trans.scale_2 = seq(     2.2,      4.2, length.out = n_scenarios),
-  hiv.trans.scale_3 = seq(     1.2,      3.04, length.out = n_scenarios),
+  hiv.trans.scale_1 = seq(       15.5, 17, length.out = n_scenarios),
+  hiv.trans.scale_2 = seq(     2.200000,      2.866667, length.out = n_scenarios),
+  hiv.trans.scale_3 = seq(     1.2,      1.813333, length.out = n_scenarios),
   hiv.trans.scale_4 = seq(     .625,      .625, length.out = n_scenarios)
 
   # tt.partial.supp.prob_1 = c(0, .2),
