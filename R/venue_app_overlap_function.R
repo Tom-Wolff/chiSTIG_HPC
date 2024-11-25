@@ -93,19 +93,33 @@ for (i in 1:length(files)) {
 
 
 overlap_summaries <- overlap_summaries %>%
-  mutate(treat = case_when(str_detect(file, "control") ~ "Control Model",
-                           str_detect(file, "apps") ~ "Apps Only",
-                           str_detect(file, "venues") ~ "Venues Only",
-                           str_detect(file, "both") ~ "Venues and Apps",
-                           TRUE ~ NA),
-         target_shift = case_when(str_detect(file, "plus") ~ "Target Stats Increased",
-                                  str_detect(file, "minus") ~ "Target Stats Decreased",
-                                  TRUE ~ NA))
+  # mutate(treat = case_when(str_detect(file, "control") ~ "Control Model",
+  #                          str_detect(file, "apps") ~ "Apps Only",
+  #                          str_detect(file, "venues") ~ "Venues Only",
+  #                          str_detect(file, "both") ~ "Venues and Apps",
+  #                          TRUE ~ NA),
+  #        target_shift = case_when(str_detect(file, "plus") ~ "Target Stats Increased",
+  #                                 str_detect(file, "minus") ~ "Target Stats Decreased",
+  #                                 TRUE ~ NA))
+mutate(treat = case_when(str_detect(file, "apps") ~ "Apps",
+                  str_detect(file, "both") ~ "Venues and Apps",
+                  str_detect(file, "control") ~ "Control",
+                  str_detect(file, "venues") ~ "Venues",
+                  TRUE ~ NA),
+      trial = str_extract(file, "\\d*_venue"))
+
+overlap_summaries$trial <- as.numeric(str_replace_all(overlap_summaries$trial, "_venue", ""))
+
+target_info <- read_delim("~/Downloads/edge_target_calibration_vals_test26sep.csv", delim = "\t") %>%
+  rename(trial = fit_no)
+
+overlap_summaries <- overlap_summaries %>%
+  dplyr::left_join(target_info, by = "trial")
 
 overlap_summaries %>%
   ggplot(aes(x = main_venue_overlap, fill = treat)) +
   geom_density() +
-  facet_grid(cols = vars(target_shift)) +
+  # facet_grid(cols = vars(trial)) +
   theme_classic() +
   labs(x = "Proportion of Partnerships with Venue Overlap",
        title = "Main Partnerships")
@@ -113,7 +127,7 @@ overlap_summaries %>%
 overlap_summaries %>%
   ggplot(aes(x = casl_venue_overlap, fill = treat)) +
   geom_density() +
-  facet_grid(cols = vars(target_shift)) +
+  # facet_grid(cols = vars(trial)) +
   theme_classic() +
   labs(x = "Proportion of Partnerships with Venue Overlap",
        title = "Casual Partnerships")
@@ -121,7 +135,33 @@ overlap_summaries %>%
 overlap_summaries %>%
   ggplot(aes(x = inst_venue_overlap, fill = treat)) +
   geom_density() +
-  facet_grid(cols = vars(target_shift)) +
+  # facet_grid(cols = vars(trial)) +
   theme_classic() +
   labs(x = "Proportion of Partnerships with Venue Overlap",
+       title = "One-Time Partnerships")
+
+# APP
+
+overlap_summaries %>%
+  ggplot(aes(x = apps_main, y = main_app_overlap, color = treat)) +
+  geom_point() +
+  # facet_grid(cols = vars(trial)) +
+  theme_classic() +
+  labs(x = "Target Statistic",
+       title = "Main Partnerships")
+
+overlap_summaries %>%
+  ggplot(aes(x = apps_casual, y = casl_app_overlap, color = treat)) +
+  geom_point() +
+  # facet_grid(cols = vars(trial)) +
+  theme_classic() +
+  labs(x = "Target Statistic",
+       title = "Casual Partnerships")
+
+overlap_summaries %>%
+  ggplot(aes(x = inst_app_overlap, fill = treat)) +
+  geom_density() +
+  # facet_grid(cols = vars(trial)) +
+  theme_classic() +
+  labs(x = "Proportion of Partnerships with App Overlap",
        title = "One-Time Partnerships")

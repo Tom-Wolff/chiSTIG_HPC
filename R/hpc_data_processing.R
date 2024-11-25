@@ -23,7 +23,7 @@ source("~/Desktop/chiSTIG_hpc/R/utils-targets.R")
 
 
 # Directory containing runs
-this_dir <- "~/Desktop/manual_nov8"
+this_dir <- "~/Desktop/bigrun_23nov"
 
 files <- list.files(this_dir)
 files <- files[stringr::str_detect(files, "rds$")]
@@ -32,10 +32,22 @@ files <- files[stringr::str_detect(files, "rds$")]
 
 # sim <- readRDS(paste(this_dir, files[[i]], sep = "/"))
 
+process_start <- Sys.time()
+
+max_ids <- c()
+
 for (i in 1:length(files)) {
-  this_targets <- tibble::as_tibble(readRDS(paste(this_dir, files[[i]], sep = "/"))) %>%
+
+  this_file <- readRDS(paste(this_dir, files[[i]], sep = "/"))
+  max_ids[[i]] <- max(this_file[[1]]$attr$numeric.id)
+
+  # this_targets <- tibble::as_tibble(readRDS(paste(this_dir, files[[i]], sep = "/"))) %>%
+  this_targets <- as.data.frame(this_file[[1]]$epi) %>%
     mutate_calibration_targets() %>%
-    mutate(i.prev.disp.BW = i.prev.B - i.prev.W,
+    mutate(# AIDS-Related Deaths, Total
+           dep.AIDS = dep.AIDS.on.tx + dep.AIDS.off.tx,
+
+           i.prev.disp.BW = i.prev.B - i.prev.W,
            i.prev.disp.HW = i.prev.H - i.prev.W,
            cc.dx.B = ifelse(is.nan(cc.dx.B), 0, cc.dx.B),
            cc.dx.H = ifelse(is.nan(cc.dx.H), 0, cc.dx.H),
@@ -51,22 +63,30 @@ for (i in 1:length(files)) {
            cc.dx = num_diagnosed/i.num,
            sim = i,
            ### Lines for manual calibration data
-           treat = as.numeric(stringr::str_extract(files[[i]], "^*\\d")),
-           trial = stringr::str_extract(files[[i]], "\\d*.rds"),
-           trial = as.numeric(stringr::str_replace_all(trial, ".rds", ""))
+           # treat = as.numeric(stringr::str_extract(files[[i]], "^*\\d")),
+           # trial = stringr::str_extract(files[[i]], "\\d*.rds"),
+           # trial = as.numeric(stringr::str_replace_all(trial, ".rds", ""))
            ### Lines for proper HPC runs
-           # treat = case_when(str_detect(files[[i]], "apps") ~ "Apps",
-                                 # str_detect(files[[i]], "both") ~ "Venues and Apps",
-                                 # str_detect(files[[i]], "control") ~ "Control",
-                                 # str_detect(files[[i]], "venues") ~ "Venues",
-                                 # TRUE ~ NA),
+           treat = case_when(str_detect(files[[i]], "apps") ~ "Apps",
+           str_detect(files[[i]], "both") ~ "Venues and Apps",
+           str_detect(files[[i]], "control") ~ "Control",
+           str_detect(files[[i]], "venues") ~ "Venues",
+           TRUE ~ NA),
+           trial = stringr::str_extract(files[[i]], "_\\d*"),
+           trial = stringr::str_replace_all(trial, "_", "")#,
+
+
+           # Comparing runs, Nov. 14
+           # original = str_detect(files[[i]], "original")
+
            # trial = str_extract(files[[i]], "calset\\d*")
            #trial = str_extract(files[[i]], "\\d*.rds")#,
            #target_shift = stringr::str_detect(files[[i]], "plus")
            ) # %>%
  #  mutate(trial = as.numeric(str_replace_all(files[[i]], "_", "")))
+# this_targets$trial <- as.numeric(str_replace_all(this_targets$trial, "calset", ""))
 
-  this_targets$trial <- as.numeric(str_replace_all(this_targets$trial, "calset", ""))
+  this_targets$time <- 1:nrow(this_targets)
 
   if (i == 1) {
     sim_targets <- this_targets
@@ -75,6 +95,7 @@ for (i in 1:length(files)) {
   }
 }
 
+sim_targets_end <- Sys.time()
 
 # Annualized Incidence Counts --------------------------------------------------
 
@@ -113,15 +134,23 @@ mean_incid <-  sim_targets %>%
             exo.ir100.W = mean(exo.ir100.W),
             ir100.W = mean(ir100.W),
 
+            dep.AIDS.on.tx = mean(dep.AIDS.on.tx),
+            dep.AIDS.off.tx = mean(dep.AIDS.off.tx),
+            dep.AIDS = mean(dep.AIDS)
+
+            # For Nov 11 Check
+            #original = mean(original)
 
 
   ) %>%
   ungroup()
 
+mean_incid2 <- mean_incid %>% dplyr::filter(time > 3000)
 
-for (j in 1:nrow(mean_incid)) {
-  this_row <- mean_incid[j,]
-  past_year <- mean_incid %>%
+
+for (j in 1:nrow(mean_incid2)) {
+  this_row <- mean_incid2[j,]
+  past_year <- mean_incid2 %>%
     filter(time <= this_row$time & time > (this_row$time-52)) %>%
     filter(treat == this_row$treat)
   sums <- as.data.frame(t(colSums(past_year[,3:ncol(past_year)])))
@@ -136,9 +165,9 @@ for (j in 1:nrow(mean_incid)) {
   }
 }
 
-for (j in 1:nrow(mean_incid)) {
-  this_row <- mean_incid[j,]
-  past_year <- mean_incid %>%
+for (j in 1:nrow(mean_incid2)) {
+  this_row <- mean_incid2[j,]
+  past_year <- mean_incid2 %>%
     filter(time <= this_row$time & time > (this_row$time-52)) %>%
     filter(treat == this_row$treat) %>%
     filter(trial == this_row$trial)
@@ -160,6 +189,9 @@ annual_incid2$total.incid.rate.dispar.HW <- annual_incid2$total.incid.H - annual
 annual_incid2$ir100.dispar.BW <- annual_incid2$ir100.B - annual_incid2$ir100.W
 annual_incid2$ir100.dispar.HW <- annual_incid2$ir100.H - annual_incid2$ir100.W
 
+process_end <- Sys.time()
+
+
 # sim_targets <- sim_targets %>% dplyr::filter(time >= 3000)
 # annual_incid <- annual_incid %>% dplyr::filter(time >= 3000)
 # annual_incid2 <- annual_incid2 %>% dplyr::filter(time >= 3000)
@@ -175,12 +207,12 @@ sim_targets %>%
   labs(title = "Mean Degree, Main Partnerships",
        x = "Time",
        y = NULL) +
-  theme_classic() +
-   facet_grid(cols = vars(trial))
+  theme_classic()# +
+  facet_grid(cols = vars(original))
 
 sim_targets %>%
   # filter(treat == "Trial 1" | treat == "Trial 2") %>%
-  filter(treat == "Venues") %>%
+  filter(treat %in% c("Apps", "Control")) %>%
   ggplot(aes(x = time, y = mean_deg_main, color = treat)) +
   geom_line(alpha = .2) +
   geom_hline(yintercept = 0.200339524, linetype = "dotted") +
@@ -189,8 +221,7 @@ sim_targets %>%
   labs(title = "Mean Degree, Main Partnerships",
        x = "Time",
        y = NULL) +
-  theme_classic() +
-  facet_grid(cols = vars(trial))
+  theme_classic()
 
 
 sim_targets %>%
@@ -204,13 +235,12 @@ sim_targets %>%
   labs(title = "Mean Degree, Casual Partnerships",
        x = "Time",
        y = NULL) +
-  theme_classic() +
-  facet_grid(cols = vars(trial))
+  theme_classic()
 
 
 sim_targets %>%
   # filter(treat == "Trial 3" | treat == "Trial 4") %>%
-  filter(treat == "Apps") %>%
+  filter(treat == c("Apps", "Control")) %>%
   ggplot(aes(x = time, y = mean_deg_cas, color = treat)) +
   geom_line(alpha = .4) +
   geom_hline(yintercept = 0.271944955, linetype = "dotted") +
@@ -219,8 +249,7 @@ sim_targets %>%
   labs(title = "Mean Degree, Casual Partnerships",
        x = "Time",
        y = NULL) +
-  theme_classic() +
- facet_grid(cols = vars(trial))
+  theme_classic()
 
 sim_targets %>%
   # filter(treat == "Trial 3" | treat == "Trial 4") %>%
@@ -233,8 +262,7 @@ sim_targets %>%
   labs(title = "Mean Degree, Casual Partnerships",
        x = "Time",
        y = NULL) +
-  theme_classic() +
-  facet_grid(cols = vars(trial))
+  theme_classic()
 
 
 sim_targets %>%
@@ -248,11 +276,10 @@ sim_targets %>%
   labs(title = "Number of Edges, Onetime Partnerships",
        x = "Time",
        y = NULL) +
-  theme_classic() +
-  facet_grid(cols = vars(trial))
+  theme_classic()
 
 sim_targets %>%
-  filter(treat == "Venues") %>%
+  filter(treat %in% c("Apps", "Control")) %>%
   ggplot(aes(x = time, y = n_edges_onetime, color = treat)) +
   geom_line(alpha = .4) +
   # geom_hline(yintercept = 0.271944955, linetype = "dotted") +
@@ -262,7 +289,7 @@ sim_targets %>%
   labs(title = "Number of Edges, Onetime Partnerships",
        x = "Time",
        y = NULL) +
-  theme_classic() +
+  theme_classic() #+
   facet_grid(cols = vars(trial))
 
 
@@ -333,10 +360,32 @@ annual_incid2 %>%
   geom_hline(yintercept = 6.42, color = "black")
 
 annual_incid2 %>%
+  filter(time > 3000 & treat == "Control") %>%
+  ggplot(aes(x = time, y = ir100.B, color = treat)) +
+  geom_line() +
+  labs(title = "Annualized Incidence Rate, (Black)",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  # facet_grid(cols = vars(trial)) +
+  geom_hline(yintercept = 6.42, color = "black")
+
+annual_incid2 %>%
   filter(time > 3000) %>%
   ggplot(aes(x = time, y = ir100.H, color = treat)) +
   geom_line() +
   labs(title = "Incidence Rate, (Hispanic)",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  # facet_grid(cols = vars(trial)) +
+  geom_hline(yintercept = 2.04, color = "black")
+
+annual_incid2 %>%
+  filter(time > 3000 & treat == "Control") %>%
+  ggplot(aes(x = time, y = ir100.H, color = treat)) +
+  geom_line() +
+  labs(title = "Annualized Incidence Rate, (Hispanic)",
        x = "Time",
        y = NULL) +
   theme_classic() +
@@ -355,10 +404,32 @@ annual_incid2 %>%
   geom_hline(yintercept = 1.71, color = "black")
 
 annual_incid2 %>%
+  filter(time > 3000 & treat == "Control") %>%
+  ggplot(aes(x = time, y = ir100.O, color = treat)) +
+  geom_line() +
+  labs(title = "Annualized Incidence Rate, (Other)",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  # facet_grid(cols = vars(trial)) +
+  geom_hline(yintercept = 1.71, color = "black")
+
+annual_incid2 %>%
   filter(time > 3000) %>%
   ggplot(aes(x = time, y = ir100.W, color = treat)) +
   geom_line() +
   labs(title = "Incidence Rate, (White)",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  # facet_grid(cols = vars(trial)) +
+  geom_hline(yintercept = 0.73, color = "black")
+
+annual_incid2 %>%
+  filter(time > 3000 & treat == "Control") %>%
+  ggplot(aes(x = time, y = ir100.W, color = treat)) +
+  geom_line() +
+  labs(title = "Annualized Incidence Rate, (White)",
        x = "Time",
        y = NULL) +
   theme_classic() +
@@ -526,6 +597,691 @@ sim_targets %>%
   theme_classic() +
   facet_grid(cols = vars(trial))
 
+
+
+##### CHECKS, NOV. 14
+
+sim_targets %>%
+  filter(time > 2000) %>%
+  filter(treat %in% c("Apps", "Control")) %>%
+  ggplot(aes(x = time, y = num, color = treat)) +
+  geom_line(alpha = .4) +
+  labs(title = "Population Size",
+       x = "Time",
+       y = NULL) +
+  theme_classic()# +
+  facet_grid(cols = vars(ifelse(original, "Original Values", "New Values")))
+
+sim_targets %>%
+  filter(time > 2000) %>%
+  filter(treat %in% c("Apps", "Control")) %>%
+  ggplot(aes(x = time, y = n__B, color = treat)) +
+  geom_line(alpha = .4) +
+  labs(title = "Population Size, Black",
+       x = "Time",
+       y = NULL) +
+  theme_classic()#+
+  facet_grid(cols = vars(ifelse(original, "Original Values", "New Values")))
+
+sim_targets %>%
+  filter(time > 2000) %>%
+  filter(treat %in% c("Apps", "Control")) %>%
+  ggplot(aes(x = time, y = n__H, color = treat)) +
+  geom_line(alpha = .4) +
+  labs(title = "Population Size, Hispanic",
+       x = "Time",
+       y = NULL) +
+  theme_classic() #+
+  facet_grid(cols = vars(ifelse(original, "Original Values", "New Values")))
+
+sim_targets %>%
+  filter(time > 2000) %>%
+  filter(treat %in% c("Apps", "Control")) %>%
+  ggplot(aes(x = time, y = n__O, color = treat)) +
+  geom_line(alpha = .4) +
+  labs(title = "Population Size, Other",
+       x = "Time",
+       y = NULL) +
+  theme_classic() #+
+  facet_grid(cols = vars(ifelse(original, "Original Values", "New Values")))
+
+sim_targets %>%
+  filter(time > 2000) %>%
+  filter(treat %in% c("Apps", "Control")) %>%
+  ggplot(aes(x = time, y = n__W, color = treat)) +
+  geom_line(alpha = .4) +
+  labs(title = "Population Size, White",
+       x = "Time",
+       y = NULL) +
+  theme_classic() #+
+  facet_grid(cols = vars(ifelse(original, "Original Values", "New Values")))
+
+
+sim_targets %>%
+  filter(time > 2000) %>%
+  filter(treat %in% c("Apps", "Control")) %>%
+  ggplot(aes(x = time, y = n__B/num, color = treat)) +
+  geom_line(alpha = .4) +
+  labs(title = "Proportion Black",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(ifelse(original, "Original Values", "New Values")))
+
+sim_targets %>%
+  filter(time > 2000) %>%
+  filter(treat %in% c("Apps", "Control")) %>%
+  ggplot(aes(x = time, y = n__H/num, color = treat)) +
+  geom_line(alpha = .4) +
+  labs(title = "Proportion Hispanic",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(ifelse(original, "Original Values", "New Values")))
+
+sim_targets %>%
+  filter(time > 2000) %>%
+  filter(treat %in% c("Apps", "Control")) %>%
+  ggplot(aes(x = time, y = n__O/num, color = treat)) +
+  geom_line(alpha = .4) +
+  labs(title = "Proportion Other",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(ifelse(original, "Original Values", "New Values")))
+
+sim_targets %>%
+  filter(time > 2000) %>%
+  filter(treat %in% c("Apps", "Control")) %>%
+  ggplot(aes(x = time, y = n__W/num, color = treat)) +
+  geom_line(alpha = .4) +
+  labs(title = "Proportion White",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(ifelse(original, "Original Values", "New Values")))
+
+annual_incid2 %>%
+  filter(time > 2000) %>%
+  filter(treat %in% c("Apps", "Control")) %>%
+  ggplot(aes(x = time, y = dep.AIDS, color = treat)) +
+  geom_line(alpha = .4) +
+  labs(title = "AIDS-Related Deaths",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(ifelse(original, "Original Values", "New Values")))
+
+aids_death_df <- sim_targets %>%
+  filter(time > 2000) %>%
+  filter(treat %in% c("Apps", "Control")) %>%
+  group_by(original, sim, treat) %>%
+  summarize(num_AIDS_deaths = sum(dep.AIDS.off.tx, na.rm = TRUE)) %>%
+  arrange(treat, original, sim)
+
+
+
+#### COMPOSITIONAL CHECKS, NOV 19
+
+######### Mean degree main by race
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_main.B, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, Main Partnerships (Both Black)",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_main.H, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, Main Partnerships (Both Hispanic)",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_main.O, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, Main Partnerships (Both Other)",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_main.W, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, Main Partnerships (Both White)",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_main.BH, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, Main Partnerships (Black-Hispanic)",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_main.BO, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, Main Partnerships (Black-Other)",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_main.BW, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, Main Partnerships (Black-White)",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_main.HO, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, Main Partnerships (Hispanic-Other)",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_main.HW, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, Main Partnerships (Hispanic-White)",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_main.OW, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, Main Partnerships (Other-White)",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+######### Mean degree Casual by race
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_casual.B, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, Casual Partnerships (Both Black)",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_casual.H, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, Casual Partnerships (Both Hispanic)",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_casual.O, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, Casual Partnerships (Both Other)",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_casual.W, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, Casual Partnerships (Both White)",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_casual.BH, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, Casual Partnerships (Black-Hispanic)",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_casual.BO, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, Casual Partnerships (Black-Other)",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_casual.BW, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, Casual Partnerships (Black-White)",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_casual.HO, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, Casual Partnerships (Hispanic-Other)",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_casual.HW, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, Casual Partnerships (Hispanic-White)",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_casual.OW, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, Casual Partnerships (Other-White)",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+######### Mean degree Onetime by race
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_onetime.B, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, Onetime Partnerships (Both Black)",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_onetime.H, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, Onetime Partnerships (Both Hispanic)",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_onetime.O, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, Onetime Partnerships (Both Other)",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_onetime.W, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, Onetime Partnerships (Both White)",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_onetime.BH, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, Onetime Partnerships (Black-Hispanic)",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_onetime.BO, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, Onetime Partnerships (Black-Other)",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_onetime.BW, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, Onetime Partnerships (Black-White)",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_onetime.HO, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, Onetime Partnerships (Hispanic-Other)",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_onetime.HW, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, Onetime Partnerships (Hispanic-White)",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_onetime.OW, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, Onetime Partnerships (Other-White)",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+
+######### Mean degree Main by age
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_main.under21, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, onetime Partnerships",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_main.over21, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, onetime Partnerships",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_main.diffage, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, onetime Partnerships",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+
+######### Mean degree casual by age
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_casual.under21, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, onetime Partnerships",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_casual.over21, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, onetime Partnerships",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_casual.diffage, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, onetime Partnerships",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+
+
+######### Mean degree onetime by age
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_onetime.under21, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, onetime Partnerships",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_onetime.over21, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, onetime Partnerships",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
+sim_targets %>%
+  # filter(treat == "Trial 1" | treat == "Trial 2") %>%
+  # filter(treat == "Apps") %>%
+  ggplot(aes(x = time, y = n_edges_onetime.diffage, color = treat)) +
+  geom_line(alpha = .2) +
+  # geom_hline(yintercept = 0.200339524, linetype = "dotted") +
+  # geom_hline(yintercept = 0.239467091) +
+  # geom_hline(yintercept = 0.278594658, linetype = "dotted") +
+  labs(title = "Mean Degree, onetime Partnerships",
+       x = "Time",
+       y = NULL) +
+  theme_classic() +
+  facet_grid(cols = vars(original))
+
 #### CALIBRATION CHECK
 
 
@@ -581,7 +1337,7 @@ library(tidyverse)
 # Population Size --------------------------------------------------------------
 i = 1
 
-target_plot(data = sim_targets9,
+target_plot(data = sim_targets,
             group = "treat",
             var = "num",
             benchmark = 11612,
@@ -592,7 +1348,7 @@ target_plot(data = sim_targets9,
 
 i <- i+1
 
-target_plot(data = sim_targets9,
+target_plot(data = sim_targets,
             group = "treat",
             var = "cc.dx",
             benchmark = 0.55333,
@@ -600,7 +1356,7 @@ target_plot(data = sim_targets9,
 
 i <- i+1
 
-target_plot(data = sim_targets9,
+target_plot(data = sim_targets,
             group = "treat",
             var = "cc.dx.B",
             benchmark = 0.546535643,
@@ -609,7 +1365,7 @@ target_plot(data = sim_targets9,
 
 i <- i+1
 
-target_plot(data = sim_targets9,
+target_plot(data = sim_targets,
             group = "treat",
             var = "cc.dx.H",
             benchmark = 0.5431367893,
@@ -617,7 +1373,7 @@ target_plot(data = sim_targets9,
 
 i <- i+1
 
-target_plot(data = sim_targets9,
+target_plot(data = sim_targets,
             group = "treat",
             var = "cc.dx.O",
             benchmark = 0.5601310,
@@ -625,7 +1381,7 @@ target_plot(data = sim_targets9,
 
 i <- i+1
 
-target_plot(data = sim_targets9,
+target_plot(data = sim_targets,
             group = "treat",
             var = "cc.dx.W",
             benchmark = 0.5988779867,
@@ -637,7 +1393,7 @@ target_plot(data = sim_targets9,
 
 i <- i+1
 
-target_plot(data = sim_targets9,
+target_plot(data = sim_targets,
             group = "treat",
             var = "cc.linked1m.B",
             benchmark = .828,
@@ -646,7 +1402,7 @@ target_plot(data = sim_targets9,
 
 i <- i+1
 
-target_plot(data = sim_targets9,
+target_plot(data = sim_targets,
             group = "treat",
             var = "cc.linked1m.H",
             benchmark = 0.867,
@@ -654,7 +1410,7 @@ target_plot(data = sim_targets9,
 
 i <- i+1
 
-target_plot(data = sim_targets9,
+target_plot(data = sim_targets,
             group = "treat",
             var = "cc.linked1m.O",
             benchmark = 0.875,
@@ -662,19 +1418,19 @@ target_plot(data = sim_targets9,
 
 i <- i+1
 
-target_plot(data = sim_targets9,
+target_plot(data = sim_targets,
             group = "treat",
             var = "cc.linked1m.W",
             benchmark = 0.936,
             title = paste("Plot ", i, ": Proportion of HIV+ Nodes Linked to Care within One Month (White)", sep = ""))
 
 
-# Proportion HIV+ Linked to Care in 1st Month ----------------------------------
+# Proportion with viral supppresion ----------------------------------
 
 
 i <- i+1
 
-target_plot(data = sim_targets9,
+target_plot(data = sim_targets,
             group = "treat",
             var = "cc.vsupp.B",
             benchmark = 0.571,
@@ -683,7 +1439,7 @@ target_plot(data = sim_targets9,
 
 i <- i+1
 
-target_plot(data = sim_targets9,
+target_plot(data = sim_targets,
             group = "treat",
             var = "cc.vsupp.H",
             benchmark = 0.675,
@@ -691,7 +1447,7 @@ target_plot(data = sim_targets9,
 
 i <- i+1
 
-target_plot(data = sim_targets9,
+target_plot(data = sim_targets,
             group = "treat",
             var = "cc.vsupp.O",
             benchmark = 0.586,
@@ -699,7 +1455,7 @@ target_plot(data = sim_targets9,
 
 i <- i+1
 
-target_plot(data = sim_targets9,
+target_plot(data = sim_targets,
             group = "treat",
             var = "cc.vsupp.W",
             benchmark = 0.617,
@@ -946,10 +1702,11 @@ target_plot(data = annual_incid2,
 i <- i+1
 target_plot(data = annual_incid2,
             var = "ir100.H",
-            group = "sim",
+            group = "treat",
             benchmark = 2.04,
             target_range = c(1.10, 3.79),
             title = paste("Plot ", i, ": Total Incidence Rate (Hispanic, Annualized)", sep = ""))
+
 i <- i+1
 target_plot(data = annual_incid2,
             var = "ir100.O",
